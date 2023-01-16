@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "alexander"
+version = "0.1.0"
+description = ""
+authors = ["Anton Zimin <zimkaa87@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.2.0"
+pylint = "^2.13.4"
+flake8-bugbear = "^22.3.23"
+flake8-builtins = "^1.5.3"
+pep8-naming = "^0.12.1"
+flake8-commas = "^2.1.0"
+flake8-variables-names = "^0.0.5"
+flake8-import-order = "^0.18.1"
+black = {version = "^22.3.0", allow-prereleases = true}
+flake8 = "^4.0.1"
+mypy = "^0.961"
+
