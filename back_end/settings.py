@@ -48,4 +48,4 @@ CHEK_CODE_URL = os.getenv(
     "CHEK_CODE_URL", "https://api.digiseller.ru/api/purchases/unique-code/{unique_code}?token={token}"
 )
 
-TEST_CHEK_CODE_URL = os.getenv("TEST_CHEK_CODE_URL", "http://ipinfo.io/ip")
+TEST_CHEK_CODE_URL = os.getenv("TEST_CHEK_CODE_URL", "http://localhost:5000/api/purchases/unique-code/{unique_code}?token={token}")

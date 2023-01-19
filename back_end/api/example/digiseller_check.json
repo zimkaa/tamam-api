@@ -1,0 +1,30 @@
+{
+  "retval": 0,
+  "retdesc": "",
+  "inv": 0,
+  "id_goods": 0,
+  "amount": 0.0,
+  "type_curr": "",
+  "profit": "",
+  "amount_usd": 0.0,
+  "date_pay": "",
+  "email": "",
+  "agent_id": 0,
+  "agent_percent": 0,
+  "unit_goods": 0,
+  "cnt_goods": 0,
+  "promo_code": "",
+  "bonus_code": "",
+  "cart_uid": "",
+  "unique_code_state": {
+    "state": 0,
+    "date_check": "",
+    "date_delivery": "",
+    "date_confirmed": "",
+    "date_refuted": ""
+  },
+  "options":[
+    {"id": "0", "name": "", "value": ""},
+    {"id": "0", "name": "", "value": ""}
+  ]
+}

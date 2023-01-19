@@ -1,6 +1,6 @@
 import uvicorn
 
-from beck_end.main import app
+from back_end.main import app
 
 
 if __name__ == "__main__":

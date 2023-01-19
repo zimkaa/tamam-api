@@ -1,11 +1,11 @@
-from typing import Union
 from uuid import UUID
 
 from sqlalchemy import update, and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
-from beck_end.db.models import Code, Card
+from back_end.db.models import Code, Card
+from back_end.utils.telegramm import send_telegram_message
 
 ###########################################################
 # BLOCK FOR INTERACTION WITH DATABASE IN BUSINESS CONTEXT #
@@ -42,7 +42,32 @@ class CodeDAL:
             logger.debug(f"{code_row=}")
             return code_row
 
-    # async def delete_code(self, user_id: UUID) -> Union[UUID, None]:
+    async def update_card(self, card_id: UUID, **kwargs) -> UUID | None:
+        query = (
+            update(Card)
+            .where(and_(Card.card_id == card_id, Card.is_received == False))
+            .values(kwargs)
+            .returning(Card.card_id)
+        )
+        res = await self.db_session.execute(query)
+        update_card_id_row = res.fetchone()
+        if update_card_id_row is not None:
+            return update_card_id_row[0]
+        logger.critical(f"update_card trouble!!! {card_id=}")
+        return None
+
+    async def update_card_row(self, row_list: list[Card]) -> bool:
+        for row in row_list:
+            rows_to_change = {"inv": row.inv, "is_received": row.is_received}
+            executed = await self.update_card(row.card_id, **rows_to_change)
+            if not executed:
+                text = f"update_card_row FAIL {row.card_id=}"
+                logger.error(text)
+                await send_telegram_message(text)
+                return False
+        return True
+
+    # async def delete_code(self, user_id: UUID) -> UUID | None:
     #     query = (
     #         update(Code)
     #         .where(and_(Code.code_id == user_id, Code.is_received == True))
@@ -54,14 +79,14 @@ class CodeDAL:
     #     if deleted_code_id_row is not None:
     #         return deleted_code_id_row[0]
 
-    # async def get_code_by_id(self, code_id: UUID) -> Union[Code, None]:
+    # async def get_code_by_id(self, code_id: UUID) -> Code | None:
     #     query = select(Code).where(Code.code_id == code_id)
     #     res = await self.db_session.execute(query)
     #     code_row = res.fetchone()
     #     if code_row is not None:
     #         return code_row[0]
 
-    async def update_code(self, code_id: UUID, **kwargs) -> Union[UUID, None]:
+    async def update_code(self, code_id: UUID, **kwargs) -> UUID | None:
         query = (
             update(Code)
             .where(and_(Code.code_id == code_id, Code.is_received == True))

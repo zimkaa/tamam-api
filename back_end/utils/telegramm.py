@@ -1,6 +1,6 @@
 import httpx
 
-from beck_end import settings
+from back_end import settings
 
 
 async def send_telegram_message(text: str) -> None:

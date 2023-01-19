@@ -10,10 +10,11 @@ from loguru import logger
 from .models import ResponseDigiseller, test_response_digiseller
 
 # from .models import CodeCreate, ShowUser, DeleteUserResponse, UpdateUserRequest, UpdatedUserResponse
-from beck_end.settings import CHEK_CODE_URL, TEST_CHEK_CODE_URL, TEST_DIGISELLER_TOKEN, DIGISELLER_TOKEN
-from beck_end.db.dals import CodeDAL
-from beck_end.db.session import get_db
-from beck_end.utils.telegramm import send_telegram_message
+from back_end.settings import CHEK_CODE_URL, TEST_CHEK_CODE_URL, TEST_DIGISELLER_TOKEN, DIGISELLER_TOKEN
+from back_end.db.dals import CodeDAL
+from back_end.db.session import get_db
+from back_end.db.models import Card
+from back_end.utils.telegramm import send_telegram_message
 
 
 user_router = APIRouter()
@@ -149,18 +150,46 @@ async def _check_is_received(digi_answer: ResponseDigiseller, db) -> bool:
     return False
 
 
-async def _write_verification_result(digi_answer: ResponseDigiseller, db):
+async def create_certificates_chain(order_amount: int, store: list[Card]) -> list[Card] | None:
+    card_list = list()
+    amount = order_amount
+    for elem in store:
+        if amount - elem.amount > 0:
+            amount -= elem.amount
+            card_list.append(elem.card_id)
+        elif amount - elem.amount == 0:
+            amount -= elem.amount
+            card_list.append(elem.card_id)
+            return card_list
+        else:
+            continue
+    text = f"create_certificates_chain amount not covered {amount=}"
+    logger.error(text)
+    await send_telegram_message(text)
+    return None
+
+
+async def _write_verification_result(digi_answer: ResponseDigiseller, db) -> str:
     async with db as session:
         async with session.begin():
             code_dal = CodeDAL(session)
             try:
                 card_row = await code_dal.get_valide_code()
                 logger.debug(f"{type(card_row)} {card_row=}")
+                give_away_list_cards = await create_certificates_chain(digi_answer.amount, card_row)
+                if not give_away_list_cards:
+                    return "There was a problem. The support service is already dealing with your issue. You can contact support by ..."
+
+                result = await code_dal.update_card_row(give_away_list_cards)
+                if not result:
+                    return "There was a problem. The support service is already dealing with your issue. You can contact support by ..."
+                front_string = " ".join([card.card_code for card in give_away_list_cards])
+                return front_string
             except Exception as error:
-                text = f"_create_new_code Base {error=}"
+                text = f"_write_verification_result {error=}"
                 logger.error(text)
                 await send_telegram_message(text)
-                return False
+                return "There was a problem. The support service is already dealing with your issue. You can contact support by ..."
 
 
 @user_router.get("/check-code")
@@ -171,10 +200,10 @@ async def check_code(uniquecode: str, db: AsyncSession = Depends(get_db)):
     if result:
         digi_answer = await _get_verification_result(uniquecode)
         if not await _check_is_received(digi_answer, db):
-            await _write_verification_result(digi_answer, db)
+            answer = await _write_verification_result(digi_answer, db)
         # if user is None:
         #     raise HTTPException(status_code=404, detail=f"User with id {user_id} not found.")
-        return "OK!!! HTML will return in the future"
+        return answer
     logger.error(f"{result=}")
     return "An error has occurred. HTML will return in the future"
 

@@ -1,0 +1,38 @@
+docker run -p 80:80 \
+    -e 'PGADMIN_DEFAULT_EMAIL=anton@domain.com' \
+    -e 'PGADMIN_DEFAULT_PASSWORD=Anton' \
+    -d dpage/pgadmin4
+
+admin db viewer
+
+
+docker run -d \
+	--name postgres-test-db \
+    -p 5432:5432 \
+	-e POSTGRES_PASSWORD=12345 \
+	-e PGDATA=/home/anton/PetProject/oleg/amega/pg_db/new_test_db \
+	-v /custom/mount:/var/lib/postgresql/data \
+	postgres
+
+docker run -d \
+	--name postgres-test-db2 \
+    -p 5432:5432 \
+	-e POSTGRES_PASSWORD=12345 \
+    -v pgdata:/var/lib/postgresql/data \
+	postgres
+
+
+docker volume ls  ------- (see all local volumes)
+
+docker volume create NAME    ------- (create local NAME volume)
+
+docker start exciting_easley ------- to start PGADMIN
+
+docker start postgres-test-db2 ------- to start DB in docker 
+
+docker inspect postgres-test-db2    ---- to get IP adress to connect pgadmin4   #### docker inspect alpine
+
+docker exec -i postgres-test-db psql -U postgres < /home/anton/PetProject/oleg/amega/backup_Amega.sql
+
+docker compose up -d
+

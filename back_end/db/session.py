@@ -3,7 +3,7 @@ from typing import Generator
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from beck_end import settings
+from back_end import settings
 
 ##############################################
 # BLOCK FOR COMMON INTERACTION WITH DATABASE #
