@@ -7,6 +7,15 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
+fastapi = "^0.89.1"
+sqlalchemy = "^1.4.46"
+pydantic = {extras = ["email"], version = "^1.10.4"}
+uvicorn = "^0.20.0"
+psycopg2-binary = "^2.9.5"
+alembic = "^1.9.2"
+httpx = "^0.23.3"
+asyncpg = "^0.27.0"
+loguru = "^0.6.0"
 
 
 [build-system]
@@ -25,4 +34,6 @@ flake8-import-order = "^0.18.1"
 black = {version = "^22.3.0", allow-prereleases = true}
 flake8 = "^4.0.1"
 mypy = "^0.961"
+pytest-asyncio = "^0.20.3"
+python-dotenv = "^0.21.0"
 
