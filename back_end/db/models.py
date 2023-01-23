@@ -28,7 +28,7 @@ class Card(Base):
     card_code = Column(String, nullable=False)
     surname = Column(String, nullable=False)
     email = Column(String, nullable=False)
-    inv = Column(Integer, nullable=False, unique=True)
+    inv = Column(Integer, nullable=True, unique=True)
     is_received = Column(Boolean(), default=False)
     amount = Column(Integer, nullable=False)
     amount_tl = Column(Integer, nullable=False)
