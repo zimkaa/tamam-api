@@ -1,9 +1,9 @@
 {
   "retval": 0,
   "retdesc": "",
-  "inv": 0,
+  "inv": 500,
   "id_goods": 0,
-  "amount": 0.0,
+  "amount": 500.0,
   "type_curr": "",
   "profit": "",
   "amount_usd": 0.0,

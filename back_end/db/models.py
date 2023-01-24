@@ -1,6 +1,7 @@
+import datetime
 import uuid
 
-from sqlalchemy import Column, String, Boolean, Integer
+from sqlalchemy import Column, String, Boolean, Integer, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base
 
@@ -26,9 +27,11 @@ class Card(Base):
 
     card_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     card_code = Column(String, nullable=False)
-    surname = Column(String, nullable=False)
-    email = Column(String, nullable=False)
-    inv = Column(Integer, nullable=True, unique=True)
+    surname = Column(String)
+    email = Column(String)
+    inv = Column(Integer)
     is_received = Column(Boolean(), default=False)
     amount = Column(Integer, nullable=False)
     amount_tl = Column(Integer, nullable=False)
+    added_time = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    used_time = Column(DateTime)

@@ -1,3 +1,4 @@
+import datetime
 from uuid import UUID
 
 from sqlalchemy import update, and_, select
@@ -35,7 +36,7 @@ class CodeDAL:
         return False
 
     async def get_valide_code(self):
-        query = select(Card).where(Card.is_received == False)
+        query = select(Card).where(Card.is_received == False).order_by(Card.amount.desc())
         res = await self.db_session.execute(query)
         code_row = res.fetchall()
         if code_row is not None:
@@ -43,6 +44,7 @@ class CodeDAL:
             return code_row
 
     async def update_card(self, card_id: UUID, **kwargs) -> UUID | None:
+        logger.critical(f"{type(kwargs)} {kwargs=}")
         query = (
             update(Card)
             .where(and_(Card.card_id == card_id, Card.is_received == False))
@@ -56,9 +58,10 @@ class CodeDAL:
         logger.critical(f"update_card trouble!!! {card_id=}")
         return None
 
-    async def update_card_row(self, row_list: list[Card]) -> bool:
+    async def update_card_row(self, row_list: list[Card], inv: int) -> bool:
         for row in row_list:
-            rows_to_change = {"inv": row.inv, "is_received": row.is_received}
+            rows_to_change = {"inv": inv, "is_received": True, "used_time": datetime.datetime.utcnow()}
+            logger.debug(f"{rows_to_change=}")
             executed = await self.update_card(row.card_id, **rows_to_change)
             if not executed:
                 text = f"update_card_row FAIL {row.card_id=}"

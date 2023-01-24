@@ -1,8 +1,8 @@
-"""new table names
+"""initial config
 
-Revision ID: 870d1ac9edf9
+Revision ID: c268317bb8d8
 Revises: 
-Create Date: 2023-01-19 22:52:15.276521
+Create Date: 2023-01-24 00:02:01.371067
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '870d1ac9edf9'
+revision = 'c268317bb8d8'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -21,12 +21,14 @@ def upgrade() -> None:
     op.create_table('card',
     sa.Column('card_id', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('card_code', sa.String(), nullable=False),
-    sa.Column('surname', sa.String(), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
-    sa.Column('inv', sa.Integer(), nullable=False),
+    sa.Column('surname', sa.String(), nullable=True),
+    sa.Column('email', sa.String(), nullable=True),
+    sa.Column('inv', sa.Integer(), nullable=True),
     sa.Column('is_received', sa.Boolean(), nullable=True),
     sa.Column('amount', sa.Integer(), nullable=False),
     sa.Column('amount_tl', sa.Integer(), nullable=False),
+    sa.Column('added_time', sa.DateTime(), nullable=False),
+    sa.Column('used_time', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('card_id'),
     sa.UniqueConstraint('inv')
     )

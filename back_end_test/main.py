@@ -1,4 +1,8 @@
 import json
+import os
+import random
+from typing import Any, Generator
+from pathlib import Path
 
 import httpx
 from fastapi import FastAPI, Request, status
@@ -10,8 +14,10 @@ from starlette.templating import Jinja2Templates
 from starlette.responses import RedirectResponse
 from starlette.status import HTTP_303_SEE_OTHER, HTTP_302_FOUND
 from loguru import logger
+from faker import Faker
 
 from .config import settings
+from .response_model import empty_response_digiseller, ResponseDigiseller
 
 
 logger.add("server.log", format="{time} {level} {message}", level="DEBUG", rotation="10 MB", compression="zip")
@@ -25,6 +31,8 @@ test_app = FastAPI(title="code checker")
 
 test_app.mount("/static", StaticFiles(directory="back_end_test/static"), name="static")
 templates = Jinja2Templates(directory="back_end_test/templates")
+PROJECT_PATH = Path(__file__).parent.resolve()
+fake = Faker()
 
 
 @test_app.exception_handler(ValidationError)
@@ -35,13 +43,53 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
     )
 
 
+def random_gener() -> Generator[ResponseDigiseller, Any, None]:
+    iter_num = 10
+    while iter_num != 0:
+        empty_response_digiseller.amount = random.randint(0, 9) * 100
+        empty_response_digiseller.inv = random.randint(0, 9)
+        empty_response_digiseller.email = fake.email()
+        yield empty_response_digiseller
+
+
+response_generator_random = random_gener()
+
+
+def stable_gener() -> Generator[ResponseDigiseller, Any, None]:
+    # amount = [500, 100, 20, 750, 350]
+    # inv = [456, 887, 890, 234, 543]
+    amount = [500, 2100, 600, 1500, 500]
+    inv = [456, 887, 890, 234, 543]
+    email = [fake.email(), fake.email(), fake.email(), fake.email(), fake.email()]
+    index = 0
+    while True:
+        empty_response_digiseller.amount = amount[index]
+        empty_response_digiseller.inv = inv[index]
+        empty_response_digiseller.email = email[index]
+        yield empty_response_digiseller
+        index += 1
+        if index == 5:
+            index = 0
+
+
+response_generator_stable = stable_gener()
+
+
 @test_app.get("/api/purchases/unique-code/{unique_code}")
 async def send_answer(unique_code: str, token: str):
     logger.debug(f"{type(token)} {token=}")
     logger.debug(f"{type(unique_code)} {unique_code=}")
-    with open("back_end_test/digiseller_check.json", "r", encoding="utf-8") as file:
-        info = json.load(file)
-    return JSONResponse(info)
+    # file_name = "digiseller_check"
+    # file_path = os.path.join(PROJECT_PATH, "back_end_test", f"{file_name}.json")
+    # with open(file_path, "r", encoding="utf-8") as file:
+    #     info = json.load(file)
+    # return JSONResponse(info)
+
+    # result = next(response_generator_random)
+    # if not result:
+    #     result = next(response_generator_stable)
+    result = next(response_generator_stable)
+    return JSONResponse(result.dict())
 
 
 @test_app.get("/send_request")

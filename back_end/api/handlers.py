@@ -1,6 +1,8 @@
 from typing import Union
 from uuid import UUID
+import json
 
+from pydantic.tools import parse_obj_as
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 import httpx
@@ -132,9 +134,11 @@ async def _get_verification_result(code: str) -> ResponseDigiseller:
         url = TEST_CHEK_CODE_URL.format(token=TEST_DIGISELLER_TOKEN, unique_code=code)
         response = await client.get(url)
         logger.critical(f"_check_code {response.text=}")
+        digi_answer = json.loads(response.content)
+        # resp = parse_obj_as(ResponseDigiseller, user_dict)
         # digi_answer = ResponseDigiseller(response.content)
-    # return ResponseDigiseller(response.content)
-    return test_response_digiseller
+    return ResponseDigiseller(**digi_answer)
+    # return test_response_digiseller
 
 
 async def _check_is_received(digi_answer: ResponseDigiseller, db) -> bool:
@@ -143,23 +147,24 @@ async def _check_is_received(digi_answer: ResponseDigiseller, db) -> bool:
             code_dal = CodeDAL(session)
             exist = await code_dal.check_code_in_db(inv=digi_answer.inv)
             if exist:
-                text = f"_check_is_received code {exist=}"
+                text = f"_check_is_received code has already been issued {exist=}"
                 logger.error(text)
                 await send_telegram_message(text)
                 return True
     return False
 
 
-async def create_certificates_chain(order_amount: int, store: list[Card]) -> list[Card] | None:
+async def create_certificates_chain(order_amount: int, store: list[tuple[Card]]) -> list[Card] | None:
     card_list = list()
     amount = order_amount
     for elem in store:
-        if amount - elem.amount > 0:
-            amount -= elem.amount
-            card_list.append(elem.card_id)
-        elif amount - elem.amount == 0:
-            amount -= elem.amount
-            card_list.append(elem.card_id)
+        logger.info(f"\n{elem[0].amount=} {amount=}")
+        if amount - elem[0].amount > 0:
+            amount -= elem[0].amount
+            card_list.append(elem[0])
+        elif amount - elem[0].amount == 0:
+            amount -= elem[0].amount
+            card_list.append(elem[0])
             return card_list
         else:
             continue
@@ -175,19 +180,21 @@ async def _write_verification_result(digi_answer: ResponseDigiseller, db) -> str
             code_dal = CodeDAL(session)
             try:
                 card_row = await code_dal.get_valide_code()
-                logger.debug(f"{type(card_row)} {card_row=}")
                 give_away_list_cards = await create_certificates_chain(digi_answer.amount, card_row)
+                logger.debug(f"{give_away_list_cards=}")
                 if not give_away_list_cards:
                     return "There was a problem. The support service is already dealing with your issue. You can contact support by ..."
 
-                result = await code_dal.update_card_row(give_away_list_cards)
+                logger.debug(f"{digi_answer.inv=}")
+                result = await code_dal.update_card_row(give_away_list_cards, digi_answer.inv)
+                logger.debug(f"{result=}")
                 if not result:
                     return "There was a problem. The support service is already dealing with your issue. You can contact support by ..."
                 front_string = " ".join([card.card_code for card in give_away_list_cards])
                 return front_string
             except Exception as error:
                 text = f"_write_verification_result {error=}"
-                logger.error(text)
+                logger.critical(text)
                 await send_telegram_message(text)
                 return "There was a problem. The support service is already dealing with your issue. You can contact support by ..."
 
@@ -199,11 +206,12 @@ async def check_code(uniquecode: str, db: AsyncSession = Depends(get_db)):
     result = await _create_new_code(uniquecode, db)
     if result:
         digi_answer = await _get_verification_result(uniquecode)
-        if not await _check_is_received(digi_answer, db):
+        if not await _check_is_received(digi_answer, db):  # TODO check when true
             answer = await _write_verification_result(digi_answer, db)
+            return answer
         # if user is None:
         #     raise HTTPException(status_code=404, detail=f"User with id {user_id} not found.")
-        return answer
+        return "Сode has already been issued"
     logger.error(f"{result=}")
     return "An error has occurred. HTML will return in the future"
 

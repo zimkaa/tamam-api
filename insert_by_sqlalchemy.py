@@ -2,6 +2,7 @@
 
 import argparse
 import os
+from pathlib import Path
 import uuid
 import csv
 import datetime
@@ -27,7 +28,6 @@ FORCE = False
 if args["force"]:
     FORCE = True
 
-print(f"{FORCE=}")
 
 DB_USER = os.getenv("DB_USER")
 DB_PASS = os.getenv("DB_PASS")
@@ -40,11 +40,13 @@ TG_URL = os.getenv("TG_URL")
 
 REAL_DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
+PROJECT_PATH = Path(__file__).parent.resolve()
+
 Base = declarative_base()
 
 
 class Card(Base):
-    __tablename__ = "details"
+    __tablename__ = "card"
 
     card_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     card_code = Column(String, nullable=False)
@@ -93,7 +95,9 @@ def main():
     text = ""
     with Session() as session:
         with session.begin():
-            with open("./inser_data_to_db/test_import.csv", "r") as file:
+            file_name = "test_import"
+            file_path = os.path.join(PROJECT_PATH, "inser_data_to_db", f"{file_name}.csv")
+            with open(file_path, "r") as file:
                 reader = csv.reader(file)
                 keys = next(reader)  # This skips the 1st row which is the header.
                 for record in reader:
