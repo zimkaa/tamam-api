@@ -59,9 +59,13 @@ response_generator_random = random_gener()
 def stable_gener() -> Generator[ResponseDigiseller, Any, None]:
     # amount = [500, 100, 20, 750, 350]
     # inv = [456, 887, 890, 234, 543]
-    amount = [500, 2100, 600, 1500, 500]
-    inv = [456, 887, 890, 234, 543]
-    email = [fake.email(), fake.email(), fake.email(), fake.email(), fake.email()]
+    amount1 = [500, 2100, 600, 1500, 500]
+    amount = amount1 * 3
+    inv = [456, 887, 890, 234, 543, 123, 223, 334, 224, 445, 443, 776, 779, 969, 556]
+    email1 = [fake.email(), fake.email(), fake.email(), fake.email(), fake.email()]
+    email2 = [fake.email(), fake.email(), fake.email(), fake.email(), fake.email()]
+    email3 = [fake.email(), fake.email(), fake.email(), fake.email(), fake.email()]
+    email = email1 + email2 + email3
     index = 0
     while True:
         empty_response_digiseller.amount = amount[index]
@@ -69,7 +73,7 @@ def stable_gener() -> Generator[ResponseDigiseller, Any, None]:
         empty_response_digiseller.email = email[index]
         yield empty_response_digiseller
         index += 1
-        if index == 5:
+        if index == 15:
             index = 0
 
 

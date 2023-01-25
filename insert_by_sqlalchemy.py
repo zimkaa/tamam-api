@@ -22,12 +22,17 @@ load_dotenv()
 # создаём парсер аргументов и передаём их
 ap = argparse.ArgumentParser()
 ap.add_argument("-f", "--force", action="store_true", help="write without checking duplicate")
+ap.add_argument("-n", "--name", help="file name")
 args = vars(ap.parse_args())
 
 FORCE = False
 if args["force"]:
     FORCE = True
 
+if args["name"]:
+    FILE_NAME = args["name"]
+else:
+    FILE_NAME = "test_import"
 
 DB_USER = os.getenv("DB_USER")
 DB_PASS = os.getenv("DB_PASS")
@@ -60,7 +65,7 @@ class Card(Base):
     used_time = Column(DateTime)
 
 
-engine = create_engine(REAL_DATABASE_URL, future=True, echo=True, execution_options={"isolation_level": "AUTOCOMMIT"})
+engine = create_engine(REAL_DATABASE_URL, future=True, execution_options={"isolation_level": "AUTOCOMMIT"})
 
 Base.metadata.create_all(engine)
 
@@ -87,7 +92,6 @@ def check_duplicate(session: sessionmaker, card_code) -> None | str:
     if code_row is None:
         return None
     text = f"\n{card_code}"
-    print(f"\n{card_code=}")
     return text
 
 
@@ -95,8 +99,7 @@ def main():
     text = ""
     with Session() as session:
         with session.begin():
-            file_name = "test_import"
-            file_path = os.path.join(PROJECT_PATH, "inser_data_to_db", f"{file_name}.csv")
+            file_path = os.path.join(PROJECT_PATH, "inser_data_to_db", f"{FILE_NAME}.csv")
             with open(file_path, "r") as file:
                 reader = csv.reader(file)
                 keys = next(reader)  # This skips the 1st row which is the header.
