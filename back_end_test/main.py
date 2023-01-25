@@ -1,6 +1,7 @@
 import json
 import os
 import random
+import string
 from typing import Any, Generator
 from pathlib import Path
 
@@ -27,7 +28,7 @@ logger.add("server.log", format="{time} {level} {message}", level="DEBUG", rotat
 #########################
 
 # create instance of the app
-test_app = FastAPI(title="code checker")
+test_app = FastAPI(title=settings.app_name)
 
 test_app.mount("/static", StaticFiles(directory="back_end_test/static"), name="static")
 templates = Jinja2Templates(directory="back_end_test/templates")
@@ -35,12 +36,12 @@ PROJECT_PATH = Path(__file__).parent.resolve()
 fake = Faker()
 
 
-@test_app.exception_handler(ValidationError)
-async def validation_exception_handler(request: Request, exc: ValidationError):
-    return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content=jsonable_encoder({"detail": exc.errors()}),
-    )
+# @test_app.exception_handler(ValidationError)
+# async def validation_exception_handler(request: Request, exc: ValidationError):
+#     return JSONResponse(
+#         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+#         content=jsonable_encoder({"detail": exc.errors()}),
+#     )
 
 
 def random_gener() -> Generator[ResponseDigiseller, Any, None]:
@@ -79,11 +80,6 @@ response_generator_stable = stable_gener()
 async def send_answer(unique_code: str, token: str):
     logger.debug(f"{type(token)} {token=}")
     logger.debug(f"{type(unique_code)} {unique_code=}")
-    # file_name = "digiseller_check"
-    # file_path = os.path.join(PROJECT_PATH, "back_end_test", f"{file_name}.json")
-    # with open(file_path, "r", encoding="utf-8") as file:
-    #     info = json.load(file)
-    # return JSONResponse(info)
 
     # result = next(response_generator_random)
     # if not result:
@@ -95,42 +91,44 @@ async def send_answer(unique_code: str, token: str):
 @test_app.get("/send_request")
 async def send_request():
     async with httpx.AsyncClient() as client:
-        url = "http://localhost:8000/user/check-code?uniquecode=1234567890123456"
+        letters = string.ascii_lowercase
+        rand_string = "".join(random.choice(letters) for i in range(16))
+        url = f"http://localhost:8000/check-code?uniquecode={rand_string}"
         response = await client.get(url)
         logger.critical(f"{response.text=}")
     return response.text
 
 
-@test_app.get("/")
-def home(request: Request):
-    todos = [
-        {"id": "test", "title": "title", "is_complete": False},
-        {"id": "test", "title": "title", "is_complete": False},
-        {"id": "test", "title": "title", "is_complete": False},
-        {"id": "test", "title": "title", "is_complete": False},
-    ]
-    return templates.TemplateResponse(
-        "start/index.html", {"request": request, "app_name": settings.app_name, "todo_list": todos}
-    )
+# @test_app.get("/")
+# def home(request: Request):
+#     todos = [
+#         {"id": "test", "title": "title", "is_complete": False},
+#         {"id": "test", "title": "title", "is_complete": False},
+#         {"id": "test", "title": "title", "is_complete": False},
+#         {"id": "test", "title": "title", "is_complete": False},
+#     ]
+#     return templates.TemplateResponse(
+#         "start/index.html", {"request": request, "app_name": settings.app_name, "todo_list": todos}
+#     )
 
 
-@test_app.get("/just/{todo_id}")
-def just(todo_id: str):
-    print(f"{todo_id=}")
-    url = test_app.url_path_for("home")
+# @test_app.get("/just/{todo_id}")
+# def just(todo_id: str):
+#     print(f"{todo_id=}")
+#     url = test_app.url_path_for("home")
 
-    return RedirectResponse(url=url, status_code=HTTP_302_FOUND)
+#     return RedirectResponse(url=url, status_code=HTTP_302_FOUND)
 
 
-@test_app.get("/view-codes")
-def just(request: Request):
-    codes = [
-        {"id": "1", "title": "500"},
-        {"id": "2", "title": "300"},
-        {"id": "3", "title": "600"},
-        {"id": "4", "title": "150"},
-    ]
+# @test_app.get("/view-codes")
+# def just(request: Request):
+#     codes = [
+#         {"id": "1", "title": "500"},
+#         {"id": "2", "title": "300"},
+#         {"id": "3", "title": "600"},
+#         {"id": "4", "title": "150"},
+#     ]
 
-    return templates.TemplateResponse(
-        "codes/index.html", {"request": request, "app_name": settings.app_name, "code_list": codes}
-    )
+#     return templates.TemplateResponse(
+#         "codes/index.html", {"request": request, "app_name": settings.app_name, "code_list": codes}
+#     )
