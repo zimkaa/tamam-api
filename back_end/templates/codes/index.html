@@ -1,0 +1,15 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+<div style="margin-top: 50px;" class="ui container">
+
+    <h1 class="ui center aligned header green">Your codes</h1>
+
+    {% for code in code_list %}
+    <div class="ui segment">
+        <p class="ui big header">Code {{ code }}</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock content %}

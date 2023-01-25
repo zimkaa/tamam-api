@@ -1,28 +1,30 @@
-import re
-import uuid
-from typing import Optional
+from pydantic import BaseModel, Field
 
-from fastapi import HTTPException
-from pydantic import BaseModel, EmailStr, validator, constr, Field
+# import re
+# import uuid
+# from typing import Optional
+
+# from fastapi import HTTPException
+# from pydantic import BaseModel, EmailStr, validator, constr, Field
 
 #########################
 # BLOCK WITH API MODELS #
 #########################
 
-LETTER_MATCH_PATTERN = re.compile(r"^[а-яА-Яa-zA-Z\-]+$")
+# LETTER_MATCH_PATTERN = re.compile(r"^[а-яА-Яa-zA-Z\-]+$")
 
 
-class TunedModel(BaseModel):
-    class Config:
-        """tells pydantic to convert even non dict obj to json"""
+# class TunedModel(BaseModel):
+#     class Config:
+#         """tells pydantic to convert even non dict obj to json"""
 
-        orm_mode = True
+#         orm_mode = True
 
 
-class ShowCode(TunedModel):
-    code_id: uuid.UUID
-    code: str
-    is_received: bool
+# class ShowCode(TunedModel):
+#     code_id: uuid.UUID
+#     code: str
+#     is_received: bool
 
 
 # class CodeCreate(BaseModel):
@@ -41,30 +43,30 @@ class ShowCode(TunedModel):
 #     #     return value
 
 
-class DeleteUserResponse(BaseModel):
-    deleted_user_id: uuid.UUID
+# class DeleteUserResponse(BaseModel):
+#     deleted_user_id: uuid.UUID
 
 
-class UpdatedUserResponse(BaseModel):
-    updated_user_id: uuid.UUID
+# class UpdatedUserResponse(BaseModel):
+#     updated_user_id: uuid.UUID
 
 
-class UpdateUserRequest(BaseModel):
-    name: Optional[constr(min_length=1)]
-    surname: Optional[constr(min_length=1)]
-    email: Optional[EmailStr]
+# class UpdateUserRequest(BaseModel):
+#     name: Optional[constr(min_length=1)]
+#     surname: Optional[constr(min_length=1)]
+#     email: Optional[EmailStr]
 
-    @validator("name")
-    def validate_name(cls, value):
-        if not LETTER_MATCH_PATTERN.match(value):
-            raise HTTPException(status_code=422, detail="Name should contains only letters")
-        return value
+#     @validator("name")
+#     def validate_name(cls, value):
+#         if not LETTER_MATCH_PATTERN.match(value):
+#             raise HTTPException(status_code=422, detail="Name should contains only letters")
+#         return value
 
-    @validator("surname")
-    def validate_surname(cls, value):
-        if not LETTER_MATCH_PATTERN.match(value):
-            raise HTTPException(status_code=422, detail="Surname should contains only letters")
-        return value
+#     @validator("surname")
+#     def validate_surname(cls, value):
+#         if not LETTER_MATCH_PATTERN.match(value):
+#             raise HTTPException(status_code=422, detail="Surname should contains only letters")
+#         return value
 
 
 class UniqueCodeState(BaseModel):
@@ -103,34 +105,3 @@ class ResponseDigiseller(BaseModel):
     cart_uid: str = Field(description="UID корзины")
     unique_code_state: UniqueCodeState = Field(description="уникальный код (состояние и даты проверки)")
     options: list[Option] = Field(description="список параметров")
-
-
-test_response_digiseller = ResponseDigiseller(
-    **{
-        "retval": 0,
-        "retdesc": "",
-        "inv": 0,
-        "id_goods": 0,
-        "amount": 0.0,
-        "type_curr": "",
-        "profit": "",
-        "amount_usd": 0.0,
-        "date_pay": "",
-        "email": "",
-        "agent_id": 0,
-        "agent_percent": 0,
-        "unit_goods": 0,
-        "cnt_goods": 0,
-        "promo_code": "",
-        "bonus_code": "",
-        "cart_uid": "",
-        "unique_code_state": {
-            "state": 0,
-            "date_check": "",
-            "date_delivery": "",
-            "date_confirmed": "",
-            "date_refuted": "",
-        },
-        "options": [{"id": "0", "name": "", "value": ""}, {"id": "0", "name": "", "value": ""}],
-    }
-)

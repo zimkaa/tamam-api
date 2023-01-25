@@ -27,21 +27,32 @@ class CodeDAL:
         return new_code
 
     async def check_code_in_db(self, inv) -> bool:
-        query = select(Card).where(Card.inv == inv)
-        res = await self.db_session.execute(query)
-        code_row = res.fetchone()
-        if code_row is not None:
-            logger.critical(f"check_code_in_db code exist in DB {code_row=}")
-            return True
+        try:
+            query = select(Card).where(Card.inv == inv)
+            res = await self.db_session.execute(query)
+            code_row = res.fetchone()
+            if code_row is not None:
+                logger.critical(f"check_code_in_db code exist in DB {code_row=}")
+                return True
+        except Exception as error:
+            text = f"check_code_in_db unexpected error {error=}"
+            logger.error(text)
+            await send_telegram_message(text)
         return False
 
-    async def get_valide_code(self):
-        query = select(Card).where(Card.is_received == False).order_by(Card.amount.desc())
-        res = await self.db_session.execute(query)
-        code_row = res.fetchall()
-        if code_row is not None:
-            logger.debug(f"{code_row=}")
-            return code_row
+    async def get_valide_code(self) -> list[tuple[Card]] | None:
+        try:
+            query = select(Card).where(Card.is_received == False).order_by(Card.amount.desc())
+            res = await self.db_session.execute(query)
+            code_rows = res.fetchall()
+            if code_rows is not None:
+                logger.debug(f"{code_rows=}")
+                return code_rows
+        except Exception as error:
+            text = f"update_card_row unexpected error {error=}"
+            logger.error(text)
+            await send_telegram_message(text)
+        return None
 
     async def update_card(self, card_id: UUID, **kwargs) -> UUID | None:
         logger.critical(f"{type(kwargs)} {kwargs=}")
@@ -58,16 +69,27 @@ class CodeDAL:
         logger.critical(f"update_card trouble!!! {card_id=}")
         return None
 
-    async def update_card_row(self, row_list: list[Card], inv: int) -> bool:
-        for row in row_list:
-            rows_to_change = {"inv": inv, "is_received": True, "used_time": datetime.datetime.utcnow()}
-            logger.debug(f"{rows_to_change=}")
-            executed = await self.update_card(row.card_id, **rows_to_change)
-            if not executed:
-                text = f"update_card_row FAIL {row.card_id=}"
-                logger.error(text)
-                await send_telegram_message(text)
-                return False
+    async def update_card_row(self, row_list: list[Card], inv: int, email: str) -> bool:
+        try:
+            for row in row_list:
+                rows_to_change = {
+                    "inv": inv,
+                    "is_received": True,
+                    "used_time": datetime.datetime.utcnow(),
+                    "email": email,
+                }
+                logger.debug(f"{rows_to_change=}")
+                executed = await self.update_card(row.card_id, **rows_to_change)
+                if not executed:
+                    text = f"update_card_row FAIL {row.card_id=}"
+                    logger.error(text)
+                    await send_telegram_message(text)
+                    return False
+        except Exception as error:
+            text = f"update_card_row unexpected error {error=}"
+            logger.error(text)
+            await send_telegram_message(text)
+            return False
         return True
 
     # async def delete_code(self, user_id: UUID) -> UUID | None:
@@ -89,14 +111,14 @@ class CodeDAL:
     #     if code_row is not None:
     #         return code_row[0]
 
-    async def update_code(self, code_id: UUID, **kwargs) -> UUID | None:
-        query = (
-            update(Code)
-            .where(and_(Code.code_id == code_id, Code.is_received == True))
-            .values(kwargs)
-            .returning(Code.code_id)
-        )
-        res = await self.db_session.execute(query)
-        update_code_id_row = res.fetchone()
-        if update_code_id_row is not None:
-            return update_code_id_row[0]
+    # async def update_code(self, code_id: UUID, **kwargs) -> UUID | None:
+    #     query = (
+    #         update(Code)
+    #         .where(and_(Code.code_id == code_id, Code.is_received == True))
+    #         .values(kwargs)
+    #         .returning(Code.code_id)
+    #     )
+    #     res = await self.db_session.execute(query)
+    #     update_code_id_row = res.fetchone()
+    #     if update_code_id_row is not None:
+    #         return update_code_id_row[0]

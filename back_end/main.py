@@ -1,11 +1,13 @@
 from fastapi import FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import ValidationError
+from starlette.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRouter
 from loguru import logger
 
 from .api.handlers import user_router
+from .settings import APP_NAME
 
 
 logger.add("server.log", format="{time} {level} {message}", level="DEBUG", rotation="10 MB", compression="zip")
@@ -15,7 +17,8 @@ logger.add("server.log", format="{time} {level} {message}", level="DEBUG", rotat
 #########################
 
 # create instance of the app
-app = FastAPI(title="code checker")
+app = FastAPI(title=APP_NAME)
+app.mount("/static", StaticFiles(directory="back_end/static"), name="static")
 
 
 @app.exception_handler(ValidationError)
@@ -30,7 +33,7 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
 main_api_router = APIRouter()
 
 # set routes to the app instance
-main_api_router.include_router(user_router, prefix="/user", tags=["user"])
+main_api_router.include_router(user_router, tags=["base"])
 app.include_router(main_api_router)
 
 # if __name__ == "__main__":

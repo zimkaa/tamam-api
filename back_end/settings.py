@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+APP_NAME = os.getenv("NAME_APP", "Code checker")
+
 DB_USER = os.getenv("DB_USER")
 
 DB_PASS = os.getenv("DB_PASS")
@@ -48,4 +50,6 @@ CHEK_CODE_URL = os.getenv(
     "CHEK_CODE_URL", "https://api.digiseller.ru/api/purchases/unique-code/{unique_code}?token={token}"
 )
 
-TEST_CHEK_CODE_URL = os.getenv("TEST_CHEK_CODE_URL", "http://localhost:5000/api/purchases/unique-code/{unique_code}?token={token}")
+TEST_CHEK_CODE_URL = os.getenv(
+    "TEST_CHEK_CODE_URL", "http://localhost:5000/api/purchases/unique-code/{unique_code}?token={token}"
+)

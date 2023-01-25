@@ -1,221 +1,177 @@
-from typing import Union
-from uuid import UUID
 import json
 
-from pydantic.tools import parse_obj_as
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+
+# from starlette.responses import RedirectResponse
+# from starlette.status import HTTP_302_FOUND
+from starlette.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 import httpx
-import asyncio
 from loguru import logger
 
-from .models import ResponseDigiseller, test_response_digiseller
-
-# from .models import CodeCreate, ShowUser, DeleteUserResponse, UpdateUserRequest, UpdatedUserResponse
-from back_end.settings import CHEK_CODE_URL, TEST_CHEK_CODE_URL, TEST_DIGISELLER_TOKEN, DIGISELLER_TOKEN
+from .models import ResponseDigiseller
+from back_end.settings import (
+    APP_NAME,
+    TEST_CHEK_CODE_URL,
+    TEST_DIGISELLER_TOKEN,
+    DIGISELLER_TOKEN,
+    CHEK_CODE_URL,
+)
 from back_end.db.dals import CodeDAL
 from back_end.db.session import get_db
 from back_end.db.models import Card
 from back_end.utils.telegramm import send_telegram_message
 
 
+templates = Jinja2Templates(directory="back_end/templates")
 user_router = APIRouter()
 
 
-# async def _create_new_user(body: UserCreate, db) -> ShowUser:
-#     async with db as session:
-#         async with session.begin():
-#             user_dal = UserDAL(session)
-#             user = await user_dal.create_user(
-#                 name=body.name,
-#                 surname=body.surname,
-#                 email=body.email,
-#             )
-#             return ShowUser(
-#                 user_id=user.user_id,
-#                 name=user.name,
-#                 surname=user.surname,
-#                 email=user.email,
-#                 is_active=user.is_active,
-#             )
+async def _create_new_code(code: str, db) -> None:
+    """Write to DB code from query
 
-
-# async def _delete_user(user_id, db) -> Union[UUID, None]:
-#     async with db as session:
-#         async with session.begin():
-#             user_dal = UserDAL(session)
-#             deleted_user_id = await user_dal.delete_user(
-#                 user_id=user_id,
-#             )
-#             return deleted_user_id
-
-
-# async def _update_user(updated_user_params: dict, user_id: UUID, db) -> Union[UUID, None]:
-#     async with db as session:
-#         async with session.begin():
-#             user_dal = UserDAL(session)
-#             updated_user_id = await user_dal.update_user(user_id=user_id, **updated_user_params)
-#             return updated_user_id
-
-
-# async def _get_user_by_id(user_id, db) -> Union[ShowUser, None]:
-#     async with db as session:
-#         async with session.begin():
-#             user_dal = UserDAL(session)
-#             user = await user_dal.get_user_by_id(
-#                 user_id=user_id,
-#             )
-#             if user is not None:
-#                 return ShowUser(
-#                     user_id=user.user_id,
-#                     name=user.name,
-#                     surname=user.surname,
-#                     email=user.email,
-#                     is_active=user.is_active,
-#                 )
-
-
-# @user_router.post("/", response_model=ShowUser)
-# async def create_user(body: UserCreate, db: AsyncSession = Depends(get_db)) -> ShowUser:
-#     return await _create_new_user(body, db)
-
-
-# @user_router.delete("/", response_model=DeleteUserResponse)
-# async def delete_user(user_id: UUID, db: AsyncSession = Depends(get_db)) -> DeleteUserResponse:
-#     deleted_user_id = await _delete_user(user_id, db)
-#     if deleted_user_id is None:
-#         raise HTTPException(status_code=404, detail=f"User with id {user_id} not found.")
-#     return DeleteUserResponse(deleted_user_id=deleted_user_id)
-
-
-# @user_router.get("/", response_model=ShowUser)
-# async def get_user_by_id(user_id: UUID, db: AsyncSession = Depends(get_db)) -> ShowUser:
-#     user = await _get_user_by_id(user_id, db)
-#     if user is None:
-#         raise HTTPException(status_code=404, detail=f"User with id {user_id} not found.")
-#     return user
-
-
-# @user_router.patch("/", response_model=UpdatedUserResponse)
-# async def update_user_by_id(
-#     user_id: UUID, body: UpdateUserRequest, db: AsyncSession = Depends(get_db)
-# ) -> UpdatedUserResponse:
-#     updated_user_params = body.dict(exclude_none=True)
-#     if updated_user_params == {}:
-#         raise HTTPException(status_code=422, detail="At least one parameter for user update info should be provided")
-#     user = await _get_user_by_id(user_id, db)
-#     if user is None:
-#         raise HTTPException(status_code=404, detail=f"User with id {user_id} not found.")
-#     updated_user_id = await _update_user(updated_user_params=updated_user_params, db=db, user_id=user_id)
-#     return UpdatedUserResponse(updated_user_id=updated_user_id)
-
-######################
-#      MY CODE       #
-######################
-
-
-async def _create_new_code(code: str, db) -> bool:
+    :param code: code
+    :type code: str
+    :param db: db connection
+    :type db: _type_
+    """
     async with db as session:
         async with session.begin():
             code_dal = CodeDAL(session)
             try:
                 await code_dal.create_code(code=code)
-                return True
             except Exception as error:
-                text = f"_create_new_code Base {error=}"
+                text = f"_create_new_code some trouble with writing\n{error=}"
                 logger.error(text)
                 await send_telegram_message(text)
-                return False
 
 
 async def _get_verification_result(code: str) -> ResponseDigiseller:
-    async with httpx.AsyncClient() as client:
-        # url = CHEK_CODE_URL.format(token=DIGISELLER_TOKEN, unique_code=code)
-        url = TEST_CHEK_CODE_URL.format(token=TEST_DIGISELLER_TOKEN, unique_code=code)
-        response = await client.get(url)
-        logger.critical(f"_check_code {response.text=}")
-        digi_answer = json.loads(response.content)
-        # resp = parse_obj_as(ResponseDigiseller, user_dict)
-        # digi_answer = ResponseDigiseller(response.content)
+    """Do request to check number of code
+
+    :param code: number of code
+    :type code: str
+    :return: answer from Digiseller
+    :rtype: ResponseDigiseller
+    """
+    try:
+        async with httpx.AsyncClient() as client:
+            # url = CHEK_CODE_URL.format(token=DIGISELLER_TOKEN, unique_code=code)
+            url = TEST_CHEK_CODE_URL.format(token=TEST_DIGISELLER_TOKEN, unique_code=code)
+            response = await client.get(url)
+            logger.critical(f"_check_code {response.text=}")
+            digi_answer = json.loads(response.content)
+    except Exception as error:
+        text = f"_get_verification_result trouble with query to Digiseller {error=}"
+        logger.error(text)
+        await send_telegram_message(text)
+        digi_answer = {}
     return ResponseDigiseller(**digi_answer)
-    # return test_response_digiseller
 
 
-async def _check_is_received(digi_answer: ResponseDigiseller, db) -> bool:
+async def _is_received(digi_answer: ResponseDigiseller, db) -> bool:
+    """Checks whether this code has already been issued
+
+    :param digi_answer: answer from Digiseller
+    :type digi_answer: ResponseDigiseller
+    :param db: db connection
+    :type db: _type_
+    :return: true or false
+    :rtype: bool
+    """
     async with db as session:
         async with session.begin():
             code_dal = CodeDAL(session)
             exist = await code_dal.check_code_in_db(inv=digi_answer.inv)
             if exist:
-                text = f"_check_is_received code has already been issued {exist=}"
+                text = f"_is_received code has already been issued {exist=}"
                 logger.error(text)
                 await send_telegram_message(text)
                 return True
     return False
 
 
-async def create_certificates_chain(order_amount: int, store: list[tuple[Card]]) -> list[Card] | None:
+async def _create_certificates_chain(order_amount: float, card_rows: list[tuple[Card]]) -> list[Card] | None:
+    """Create chain of codes to give for client
+    if amount not covered srnd mrssage to Telegramm
+
+    :param order_amount: _description_
+    :type order_amount: float
+    :param card_rows: _description_
+    :type card_rows: list[tuple[Card]]
+    :return: _description_
+    :rtype: list[Card] | None
+    """
     card_list = list()
     amount = order_amount
-    for elem in store:
-        logger.info(f"\n{elem[0].amount=} {amount=}")
-        if amount - elem[0].amount > 0:
-            amount -= elem[0].amount
-            card_list.append(elem[0])
-        elif amount - elem[0].amount == 0:
-            amount -= elem[0].amount
-            card_list.append(elem[0])
+    for card in card_rows:
+        logger.info(f"\n{card[0].amount=} {amount=}")
+        if amount - card[0].amount > 0:
+            amount -= card[0].amount
+            card_list.append(card[0])
+        elif amount - card[0].amount == 0:
+            amount -= card[0].amount
+            card_list.append(card[0])
             return card_list
         else:
             continue
-    text = f"create_certificates_chain amount not covered {amount=}"
-    logger.error(text)
+    text = f"_create_certificates_chain amount not covered {amount=} You must buy codes!!!"
+    logger.critical(text)
     await send_telegram_message(text)
     return None
 
 
-async def _write_verification_result(digi_answer: ResponseDigiseller, db) -> str:
+async def _write_verification_result(digi_answer: ResponseDigiseller, db) -> list[str] | None:
+    """Write to DB info about transaction
+
+    :param digi_answer: answer from Digiseller
+    :type digi_answer: ResponseDigiseller
+    :param db: db connection
+    :type db: _type_
+    :raises Exception: _description_
+    :raises Exception: _description_
+    :return: _description_
+    :rtype: str
+    """
     async with db as session:
         async with session.begin():
             code_dal = CodeDAL(session)
-            try:
-                card_row = await code_dal.get_valide_code()
-                give_away_list_cards = await create_certificates_chain(digi_answer.amount, card_row)
-                logger.debug(f"{give_away_list_cards=}")
-                if not give_away_list_cards:
-                    return "There was a problem. The support service is already dealing with your issue. You can contact support by ..."
 
-                logger.debug(f"{digi_answer.inv=}")
-                result = await code_dal.update_card_row(give_away_list_cards, digi_answer.inv)
-                logger.debug(f"{result=}")
-                if not result:
-                    return "There was a problem. The support service is already dealing with your issue. You can contact support by ..."
-                front_string = " ".join([card.card_code for card in give_away_list_cards])
-                return front_string
-            except Exception as error:
-                text = f"_write_verification_result {error=}"
-                logger.critical(text)
-                await send_telegram_message(text)
-                return "There was a problem. The support service is already dealing with your issue. You can contact support by ..."
+            card_rows = await code_dal.get_valide_code()
+            if card_rows is None:
+                return [
+                    "Trouble with get valide code. There was a problem. The support service is already dealing with your issue. You can contact support by ..."
+                ]
+            give_away_list_cards = await _create_certificates_chain(digi_answer.amount, card_rows)
+            logger.debug(f"{give_away_list_cards=}")
+            if give_away_list_cards is None:
+                return [
+                    "No codes to give. There was a problem. The support service is already dealing with your issue. You can contact support by ..."
+                ]
+
+            logger.debug(f"{digi_answer.inv=}")
+            updated_true = await code_dal.update_card_row(give_away_list_cards, digi_answer.inv, digi_answer.email)
+            logger.debug(f"{updated_true=}")
+            if not updated_true:
+                return [
+                    "Some trouble with update card info. There was a problem. The support service is already dealing with your issue. You can contact support by ..."
+                ]
+            result = [card.card_code for card in give_away_list_cards]
+            return result
 
 
 @user_router.get("/check-code")
-async def check_code(uniquecode: str, db: AsyncSession = Depends(get_db)):
+async def check_code(request: Request, uniquecode: str, db: AsyncSession = Depends(get_db)):
     if len(uniquecode) != 16:
         raise HTTPException(status_code=422, detail="code incorrcet")
-    result = await _create_new_code(uniquecode, db)
-    if result:
-        digi_answer = await _get_verification_result(uniquecode)
-        if not await _check_is_received(digi_answer, db):  # TODO check when true
-            answer = await _write_verification_result(digi_answer, db)
-            return answer
-        # if user is None:
-        #     raise HTTPException(status_code=404, detail=f"User with id {user_id} not found.")
-        return "Сode has already been issued"
-    logger.error(f"{result=}")
-    return "An error has occurred. HTML will return in the future"
 
+    await _create_new_code(uniquecode, db)
 
-@user_router.get("/valid", response_model=ResponseDigiseller)
-async def valid():
-    return test_response_digiseller
+    digi_answer = await _get_verification_result(uniquecode)
+    if not await _is_received(digi_answer, db):
+        answer = await _write_verification_result(digi_answer, db)
+    else:
+        answer = ["code has already been issued"]
+    return templates.TemplateResponse(
+        "codes/index.html", {"request": request, "app_name": APP_NAME, "code_list": answer}
+    )
