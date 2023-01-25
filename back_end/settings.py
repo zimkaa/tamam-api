@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-APP_NAME = os.getenv("NAME_APP", "Code checker")
+APP_NAME = os.getenv("APP_NAME", "Code checker")
 
 DB_USER = os.getenv("DB_USER")
 
