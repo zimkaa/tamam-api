@@ -26,21 +26,26 @@ class CodeDAL:
         logger.debug(f"{result=}")
         return new_code
 
-    async def check_code_in_db(self, inv) -> bool:
+    async def check_code_in_db(self, inv) -> list[Card] | None:
         try:
             query = select(Card).where(Card.inv == inv)
             res = await self.db_session.execute(query)
-            code_row = res.fetchone()
+            code_row = res.fetchall()
             if code_row is not None:
-                logger.critical(f"check_code_in_db code exist in DB {code_row=}")
-                return True
+                logger.info(f"check_code_in_db code exist in DB {type(code_row)} {code_row=}")
+                return code_row
         except Exception as error:
             text = f"check_code_in_db unexpected error {error=}"
             logger.error(text)
             await send_telegram_message(text)
-        return False
+        return None
 
     async def get_valide_code(self) -> list[tuple[Card]] | None:
+        """Get code that not used yet
+
+        :return: list of Card elements or None
+        :rtype: list[tuple[Card]] | None
+        """
         try:
             query = select(Card).where(Card.is_received == False).order_by(Card.amount.desc())
             res = await self.db_session.execute(query)
@@ -70,6 +75,17 @@ class CodeDAL:
         return None
 
     async def update_card_row(self, row_list: list[Card], inv: int, email: str) -> bool:
+        """Update row in DB
+
+        :param row_list: rows to update
+        :type row_list: list[Card]
+        :param inv: unique transaction identifier
+        :type inv: int
+        :param email: user email
+        :type email: str
+        :return: done or not
+        :rtype: bool
+        """
         try:
             for row in row_list:
                 rows_to_change = {
@@ -91,34 +107,3 @@ class CodeDAL:
             await send_telegram_message(text)
             return False
         return True
-
-    # async def delete_code(self, user_id: UUID) -> UUID | None:
-    #     query = (
-    #         update(Code)
-    #         .where(and_(Code.code_id == user_id, Code.is_received == True))
-    #         .values(is_received=False)
-    #         .returning(Code.code_id)
-    #     )
-    #     res = await self.db_session.execute(query)
-    #     deleted_code_id_row = res.fetchone()
-    #     if deleted_code_id_row is not None:
-    #         return deleted_code_id_row[0]
-
-    # async def get_code_by_id(self, code_id: UUID) -> Code | None:
-    #     query = select(Code).where(Code.code_id == code_id)
-    #     res = await self.db_session.execute(query)
-    #     code_row = res.fetchone()
-    #     if code_row is not None:
-    #         return code_row[0]
-
-    # async def update_code(self, code_id: UUID, **kwargs) -> UUID | None:
-    #     query = (
-    #         update(Code)
-    #         .where(and_(Code.code_id == code_id, Code.is_received == True))
-    #         .values(kwargs)
-    #         .returning(Code.code_id)
-    #     )
-    #     res = await self.db_session.execute(query)
-    #     update_code_id_row = res.fetchone()
-    #     if update_code_id_row is not None:
-    #         return update_code_id_row[0]

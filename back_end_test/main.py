@@ -57,8 +57,7 @@ response_generator_random = random_gener()
 
 
 def stable_gener() -> Generator[ResponseDigiseller, Any, None]:
-    # amount = [500, 100, 20, 750, 350]
-    # inv = [456, 887, 890, 234, 543]
+
     amount1 = [500, 2100, 600, 1500, 500]
     amount = amount1 * 3
     inv = [456, 887, 890, 234, 543, 123, 223, 334, 224, 445, 443, 776, 779, 969, 556]
@@ -80,6 +79,25 @@ def stable_gener() -> Generator[ResponseDigiseller, Any, None]:
 response_generator_stable = stable_gener()
 
 
+def stable_gener_fail() -> Generator[ResponseDigiseller, Any, None]:
+
+    amount = [20, 210000, 60000, 150000, 50000]
+    inv = [4564, 8874, 8904, 2344, 5434]
+    email = [fake.email(), fake.email(), fake.email(), fake.email(), fake.email()]
+    index = 0
+    while True:
+        empty_response_digiseller.amount = amount[index]
+        empty_response_digiseller.inv = inv[index]
+        empty_response_digiseller.email = email[index]
+        yield empty_response_digiseller
+        index += 1
+        if index == 5:
+            index = 0
+
+
+response_generator_stable_fail = stable_gener_fail()
+
+
 @test_app.get("/api/purchases/unique-code/{unique_code}")
 async def send_answer(unique_code: str, token: str):
     logger.debug(f"{type(token)} {token=}")
@@ -88,7 +106,11 @@ async def send_answer(unique_code: str, token: str):
     # result = next(response_generator_random)
     # if not result:
     #     result = next(response_generator_stable)
-    result = next(response_generator_stable)
+
+    # result = next(response_generator_stable)
+
+    result = next(response_generator_stable_fail)
+
     return JSONResponse(result.dict())
 
 

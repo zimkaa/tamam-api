@@ -8,7 +8,7 @@ import csv
 import datetime
 import requests
 
-from sqlalchemy import create_engine, func, select
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import Column, String, Boolean, Integer, DateTime
 from sqlalchemy.dialects.postgresql import UUID
@@ -32,7 +32,7 @@ if args["force"]:
 if args["name"]:
     FILE_NAME = args["name"]
 else:
-    FILE_NAME = "test_import"
+    FILE_NAME = "test_import2"
 
 DB_USER = os.getenv("DB_USER")
 DB_PASS = os.getenv("DB_PASS")

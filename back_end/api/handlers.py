@@ -1,4 +1,5 @@
 import json
+import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
@@ -17,7 +18,6 @@ from back_end.settings import (
     DIGISELLER_TOKEN,
     CHEK_CODE_URL,
 )
-from back_end.tasks.tasks import send_email_with_codes
 from back_end.db.dals import CodeDAL
 from back_end.db.session import get_db
 from back_end.db.models import Card
@@ -60,7 +60,7 @@ async def _get_verification_result(code: str) -> ResponseDigiseller:
             # url = CHEK_CODE_URL.format(token=DIGISELLER_TOKEN, unique_code=code)
             url = TEST_CHEK_CODE_URL.format(token=TEST_DIGISELLER_TOKEN, unique_code=code)
             response = await client.get(url)
-            logger.critical(f"_check_code {response.text=}")
+            logger.critical(f"_get_verification_result {response.text=}")
             digi_answer = json.loads(response.content)
     except Exception as error:
         text = f"_get_verification_result trouble with query to Digiseller {error=}"
@@ -84,11 +84,6 @@ async def _get_issued_codes(digi_answer: ResponseDigiseller, db) -> list[Card] |
         async with session.begin():
             code_dal = CodeDAL(session)
             issued_codes = await code_dal.check_code_in_db(inv=digi_answer.inv)
-            # if exist:
-            #     text = f"_is_received code has already been issued {exist=}"
-            #     logger.error(text)
-            #     await send_telegram_message(text)
-            #     return True
     return issued_codes
 
 
@@ -122,7 +117,19 @@ async def _create_certificates_chain(order_amount: float, card_rows: list[tuple[
     return None
 
 
-async def _write_verification_result(digi_answer: ResponseDigiseller, db) -> list[str]:
+class NoCardError(Exception):
+    """No code to give"""
+
+    pass
+
+
+class WriteToDBError(Exception):
+    """Trouble with writing in DB"""
+
+    pass
+
+
+async def _write_verification_result(digi_answer: ResponseDigiseller, db) -> list[Card]:
     """Write to DB info about transaction
 
     :param digi_answer: answer from Digiseller
@@ -140,25 +147,34 @@ async def _write_verification_result(digi_answer: ResponseDigiseller, db) -> lis
 
             card_rows = await code_dal.get_valide_code()
             if card_rows is None:
-                return [
-                    "Trouble with get valide code. There was a problem. The support service is already dealing with your issue. You can contact support by ..."
-                ]
+                text = f"AHTUNG!!! We don't have codes to sell. Сustomer paid for amount={digi_answer.amount}"
+                logger.error(text)
+                await send_telegram_message(text)
+                raise NoCardError
+
             give_away_list_cards = await _create_certificates_chain(digi_answer.amount, card_rows)
             logger.debug(f"{give_away_list_cards=}")
             if give_away_list_cards is None:
-                return [
-                    "No codes to give. There was a problem. The support service is already dealing with your issue. You can contact support by ..."
-                ]
+                text = f"AHTUNG!!! We don't have codes to sell. Сustomer paid for amount={digi_answer.amount}"
+                logger.error(text)
+                await send_telegram_message(text)
+                raise NoCardError
 
             logger.debug(f"{digi_answer.inv=}")
             updated_true = await code_dal.update_card_row(give_away_list_cards, digi_answer.inv, digi_answer.email)
             logger.debug(f"{updated_true=}")
             if not updated_true:
-                return [
-                    "Some trouble with update card info. There was a problem. The support service is already dealing with your issue. You can contact support by ..."
-                ]
-            result = [card.card_code for card in give_away_list_cards]
-            return result
+                message_string = ""
+                for card in give_away_list_cards:
+                    message_string += (
+                        f"card_id={card[0].card_id} card_code={card[0].card_code} amount={card[0].amount}\n"
+                    )
+                message_string += f"inv={digi_answer.inv} email={digi_answer.email} time={datetime.datetime.utcnow()}"
+                text = f"AHTUNG!!! Can't write to db \namount={digi_answer.amount}\nused chain {message_string}"
+                logger.error(text)
+                await send_telegram_message(text)
+                raise WriteToDBError
+            return give_away_list_cards
 
 
 @user_router.get("/check-code")
@@ -169,25 +185,21 @@ async def check_code(request: Request, uniquecode: str, db: AsyncSession = Depen
     await _create_new_code(uniquecode, db)
 
     digi_answer = await _get_verification_result(uniquecode)
-    # Old logic
     issued_codes = await _get_issued_codes(digi_answer, db)
     if not issued_codes:
-        answer = await _write_verification_result(digi_answer, db)
+        try:
+            answer = await _write_verification_result(digi_answer, db)
+        except (NoCardError, WriteToDBError):
+            return templates.TemplateResponse("codes/truoble.html", {"request": request, "app_name": APP_NAME})
+        except Exception as error:
+            text = f"I don't know this trouble {error=}"
+            logger.error(text)
+            await send_telegram_message(text)
+            return "I don't know this trouble"
     else:
         answer = []
         for card_row in issued_codes:
-            answer.append(card_row[0].card_code)
+            answer.append(card_row[0])
     return templates.TemplateResponse(
         "codes/index.html", {"request": request, "app_name": APP_NAME, "code_list": answer}
     )
-
-    # # TODO need to know what answer send when false....
-    # if not digi_answer_bad:
-    #     email_to = digi_answer.email
-    #     answer = await _write_verification_result(digi_answer, db)
-    #     send_email_with_codes(answer, email_to)
-    #     return templates.TemplateResponse(
-    #         "codes/index.html", {"request": request, "app_name": APP_NAME, "code_list": answer}
-    #     )
-    # else:
-    #     return "Bad verification result. Проверьте почту!"

@@ -1,0 +1,114 @@
+version: "3.0"
+services:
+  app:
+    build: .
+    volumes:
+      - ./:/app
+    ports:
+      - 8000:8000
+    image: app:back_end
+    container_name: my_back_end
+    command: python start.py
+    depends_on:
+      - redis
+  redis:
+    container_name: "redis"
+    image: redis/redis-stack-server:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - alex_redis:/data
+    healthcheck:
+      test: redis-cli ping
+      interval: 1s
+      timeout: 3s
+      retries: 30
+  # celery:
+  #   image: celery:3.1
+  #   container_name: celery
+  #   restart: unless-stopped
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   command: celery -A myapp worker -l INFO -c 8
+  #   volumes:
+  #     - .:/back_end
+  #   depends_on:
+  #     - redis
+  #   links:
+  #     - redis
+  worker:
+    build:
+      context: ./back_end
+    hostname: worker
+    entrypoint: celery
+    command: -A tasks.tasks:celery worker --loglevel=info
+    volumes:
+      - .:/app
+    links:
+      - redis
+    depends_on:
+      - redis
+  flower:
+    build:
+      context: ./back_end
+    command: celery -A tasks.tasks:celery flower
+    volumes:
+      - .:/app
+    ports:
+      - 5555:5555
+    environment:
+      CELERY_BROKER_URL: redis://redis
+      CELERY_RESULT_BACKEND: redis://redis
+    depends_on:
+      - redis
+      - db
+  db:
+    container_name: "db"
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - alex_pgdata:/var/lib/postgresql/data
+    networks:
+      - custom
+  db_test:
+    container_name: "db_test"
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres_test
+      - POSTGRES_PASSWORD=postgres_test
+      - POSTGRES_DB=postgres_test
+    ports:
+      - "5433:5432"
+    volumes:
+      - alex_pgdata_test:/var/lib/postgresql/data
+    networks:
+      - custom
+  my_pgadmin:
+    image: "dpage/pgadmin4"
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: anton@domain.com
+      PGADMIN_DEFAULT_PASSWORD: Anton
+    ports:
+      - "80:80"
+    networks:
+      - custom
+networks:
+  custom:
+    driver: bridge
+volumes:
+  alex_pgdata:
+    external: true
+  alex_pgdata_test:
+    external: true
+  alex_redis:
+    external: true
