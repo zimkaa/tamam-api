@@ -17,6 +17,7 @@ from back_end.settings import (
     DIGISELLER_TOKEN,
     CHEK_CODE_URL,
 )
+from back_end.tasks.tasks import send_email_with_codes
 from back_end.db.dals import CodeDAL
 from back_end.db.session import get_db
 from back_end.db.models import Card
@@ -69,7 +70,7 @@ async def _get_verification_result(code: str) -> ResponseDigiseller:
     return ResponseDigiseller(**digi_answer)
 
 
-async def _is_received(digi_answer: ResponseDigiseller, db) -> bool:
+async def _get_issued_codes(digi_answer: ResponseDigiseller, db) -> list[Card] | None:
     """Checks whether this code has already been issued
 
     :param digi_answer: answer from Digiseller
@@ -82,13 +83,13 @@ async def _is_received(digi_answer: ResponseDigiseller, db) -> bool:
     async with db as session:
         async with session.begin():
             code_dal = CodeDAL(session)
-            exist = await code_dal.check_code_in_db(inv=digi_answer.inv)
-            if exist:
-                text = f"_is_received code has already been issued {exist=}"
-                logger.error(text)
-                await send_telegram_message(text)
-                return True
-    return False
+            issued_codes = await code_dal.check_code_in_db(inv=digi_answer.inv)
+            # if exist:
+            #     text = f"_is_received code has already been issued {exist=}"
+            #     logger.error(text)
+            #     await send_telegram_message(text)
+            #     return True
+    return issued_codes
 
 
 async def _create_certificates_chain(order_amount: float, card_rows: list[tuple[Card]]) -> list[Card] | None:
@@ -121,7 +122,7 @@ async def _create_certificates_chain(order_amount: float, card_rows: list[tuple[
     return None
 
 
-async def _write_verification_result(digi_answer: ResponseDigiseller, db) -> list[str] | None:
+async def _write_verification_result(digi_answer: ResponseDigiseller, db) -> list[str]:
     """Write to DB info about transaction
 
     :param digi_answer: answer from Digiseller
@@ -168,10 +169,25 @@ async def check_code(request: Request, uniquecode: str, db: AsyncSession = Depen
     await _create_new_code(uniquecode, db)
 
     digi_answer = await _get_verification_result(uniquecode)
-    if not await _is_received(digi_answer, db):
+    # Old logic
+    issued_codes = await _get_issued_codes(digi_answer, db)
+    if not issued_codes:
         answer = await _write_verification_result(digi_answer, db)
     else:
-        answer = ["code has already been issued"]
+        answer = []
+        for card_row in issued_codes:
+            answer.append(card_row[0].card_code)
     return templates.TemplateResponse(
         "codes/index.html", {"request": request, "app_name": APP_NAME, "code_list": answer}
     )
+
+    # # TODO need to know what answer send when false....
+    # if not digi_answer_bad:
+    #     email_to = digi_answer.email
+    #     answer = await _write_verification_result(digi_answer, db)
+    #     send_email_with_codes(answer, email_to)
+    #     return templates.TemplateResponse(
+    #         "codes/index.html", {"request": request, "app_name": APP_NAME, "code_list": answer}
+    #     )
+    # else:
+    #     return "Bad verification result. Проверьте почту!"

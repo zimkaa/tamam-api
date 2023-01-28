@@ -1,7 +1,58 @@
 version: "3.0"
 services:
-  db:
-    container_name: "db"
+  # app:
+  #   build: .
+  #   volumes:
+  #     - ./:/app
+  #   ports:
+  #     - 8000:8000
+  #   container_name: my_back_end
+  #   depends_on:
+  #     - db_app
+  #     - redis
+  # redis:
+  #   container_name: "redis"
+  #   image: redis/redis-stack-server:latest
+  #   restart: always
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - alex_redis:/data
+  #   healthcheck:
+  #     test: redis-cli ping
+  #     interval: 1s
+  #     timeout: 3s
+  #     retries: 30
+  # worker:
+  #   container_name: "worker"
+  #   build:
+  #     context: .
+  #   hostname: worker
+  #   entrypoint: celery
+  #   command: -A back_end.tasks.tasks:celery worker --loglevel=info
+  #   volumes:
+  #     - .:/app
+  #   links:
+  #     - redis
+  #   depends_on:
+  #     - redis
+  # flower:
+  #   container_name: "flower"
+  #   build:
+  #     context: .
+  #   command: celery -A back_end.tasks.tasks:celery flower
+  #   volumes:
+  #     - .:/app
+  #   ports:
+  #     - 5555:5555
+  #   environment:
+  #     CELERY_BROKER_URL: redis://redis
+  #     CELERY_RESULT_BACKEND: redis://redis
+  #   depends_on:
+  #     - redis
+  #     - db_app
+  db_app:
+    container_name: "db_app"
     image: postgres:14.1-alpine
     restart: always
     environment:
@@ -14,35 +65,11 @@ services:
       - alex_pgdata:/var/lib/postgresql/data
     networks:
       - custom
-  db_test:
-    container_name: "db_test"
-    image: postgres:14.1-alpine
-    restart: always
-    environment:
-      - POSTGRES_USER=postgres_test
-      - POSTGRES_PASSWORD=postgres_test
-      - POSTGRES_DB=postgres_test
-    ports:
-      - "5433:5432"
-    volumes:
-      - alex_pgdata_test:/var/lib/postgresql/data
-    networks:
-      - custom
-  my_pgadmin:
-    image: "dpage/pgadmin4"
-    restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: anton@domain.com
-      PGADMIN_DEFAULT_PASSWORD: Anton
-    ports:
-      - "80:80"
-    networks:
-      - custom
 networks:
   custom:
     driver: bridge
 volumes:
   alex_pgdata:
     external: true
-  alex_pgdata_test:
-    external: true
+  # alex_redis:
+  #   external: true
