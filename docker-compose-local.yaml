@@ -9,48 +9,6 @@ services:
   #   container_name: my_back_end
   #   depends_on:
   #     - db_app
-  #     - redis
-  # redis:
-  #   container_name: "redis"
-  #   image: redis/redis-stack-server:latest
-  #   restart: always
-  #   ports:
-  #     - "6379:6379"
-  #   volumes:
-  #     - alex_redis:/data
-  #   healthcheck:
-  #     test: redis-cli ping
-  #     interval: 1s
-  #     timeout: 3s
-  #     retries: 30
-  # worker:
-  #   container_name: "worker"
-  #   build:
-  #     context: .
-  #   hostname: worker
-  #   entrypoint: celery
-  #   command: -A back_end.tasks.tasks:celery worker --loglevel=info
-  #   volumes:
-  #     - .:/app
-  #   links:
-  #     - redis
-  #   depends_on:
-  #     - redis
-  # flower:
-  #   container_name: "flower"
-  #   build:
-  #     context: .
-  #   command: celery -A back_end.tasks.tasks:celery flower
-  #   volumes:
-  #     - .:/app
-  #   ports:
-  #     - 5555:5555
-  #   environment:
-  #     CELERY_BROKER_URL: redis://redis
-  #     CELERY_RESULT_BACKEND: redis://redis
-  #   depends_on:
-  #     - redis
-  #     - db_app
   db_app:
     container_name: "db_app"
     image: postgres:14.1-alpine
@@ -71,5 +29,3 @@ networks:
 volumes:
   alex_pgdata:
     external: true
-  # alex_redis:
-  #   external: true
