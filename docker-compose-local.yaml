@@ -1,14 +1,26 @@
 version: "3.0"
 services:
-  # app:
-  #   build: .
-  #   volumes:
-  #     - ./:/app
-  #   ports:
-  #     - 8000:8000
-  #   container_name: my_back_end
-  #   depends_on:
-  #     - db_app
+  app:
+    build: .
+    volumes:
+      - ./:/app
+    ports:
+      - 8000:8000
+    container_name: my_back_end
+    environment:
+      - TEST_DIGISELLER_TOKEN=test_token
+      - DIGISELLER_TOKEN=example
+      - DB_USER=postgres
+      - DB_PASS=postgres
+      - DB_HOST=db_app
+      - DB_NAME=postgres
+      - DB_PORT=5432
+      - CHEK_CODE_URL=https://api.digiseller.ru/api/purchases/unique-code/{unique_code}?token={token}
+      - TEST_CHEK_CODE_URL=http://host.docker.internal:5000/api/purchases/unique-code/{unique_code}?token={token}"
+    depends_on:
+      - db_app
+    networks:
+      - custom
   db_app:
     container_name: "db_app"
     image: postgres:14.1-alpine
