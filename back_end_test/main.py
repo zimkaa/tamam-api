@@ -46,6 +46,7 @@ fake = Faker()
 def random_gener() -> Generator[ResponseDigiseller, Any, None]:
     iter_num = 10
     while iter_num != 0:
+        empty_response_digiseller.retval = 0
         empty_response_digiseller.amount = random.randint(0, 9) * 100
         empty_response_digiseller.inv = random.randint(0, 9)
         empty_response_digiseller.email = fake.email()
@@ -66,6 +67,7 @@ def stable_gener() -> Generator[ResponseDigiseller, Any, None]:
     email = email1 + email2 + email3
     index = 0
     while True:
+        empty_response_digiseller.retval = 0
         empty_response_digiseller.amount = amount[index]
         empty_response_digiseller.inv = inv[index]
         empty_response_digiseller.email = email[index]
@@ -85,6 +87,7 @@ def stable_gener_fail() -> Generator[ResponseDigiseller, Any, None]:
     email = [fake.email(), fake.email(), fake.email(), fake.email(), fake.email()]
     index = 0
     while True:
+        empty_response_digiseller.retval = 0
         empty_response_digiseller.amount = amount[index]
         empty_response_digiseller.inv = inv[index]
         empty_response_digiseller.email = email[index]
@@ -97,11 +100,29 @@ def stable_gener_fail() -> Generator[ResponseDigiseller, Any, None]:
 response_generator_stable_fail = stable_gener_fail()
 
 
+def error_gener() -> Generator[ResponseDigiseller, Any, None]:
+    amount = 2.2
+    inv = 99999
+    email = fake.email()
+    while True:
+        empty_response_digiseller.retval = 1
+        empty_response_digiseller.amount = amount
+        empty_response_digiseller.inv = inv
+        empty_response_digiseller.email = email
+        yield empty_response_digiseller
+
+
+response_generator_error = error_gener()
+
+
 @test_app.get("/api/purchases/unique-code/{unique_code}")
 async def send_answer(unique_code: str, token: str):
     logger.debug(f"{type(token)} {token=}")
-    logger.debug(f"{type(unique_code)} {unique_code=}")
-
+    logger.debug(f"{type(unique_code)} {unique_code=} len={len(unique_code)}")
+    if len(unique_code) != 16:
+        logger.debug(f"len={len(unique_code)}")
+        result = next(response_generator_error)
+        return JSONResponse(result.dict())
     # result = next(response_generator_random)
     # if not result:
     #     result = next(response_generator_stable)
@@ -118,7 +139,8 @@ async def send_request():
     async with httpx.AsyncClient() as client:
         letters = string.ascii_lowercase
         rand_string = "".join(random.choice(letters) for i in range(16))
-        url = f"http://localhost:8000/check-code?uniquecode={rand_string}"
+        # url = f"http://localhost:8000/check-code?uniquecode={rand_string}"
+        url = f"http://app:8000/check-code?uniquecode={rand_string}"
         response = await client.get(url)
         logger.critical(f"{response.text=}")
     return response.text

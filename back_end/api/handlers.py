@@ -179,12 +179,14 @@ async def _write_verification_result(digi_answer: ResponseDigiseller, db) -> lis
 
 @user_router.get("/check-code")
 async def check_code(request: Request, uniquecode: str, db: AsyncSession = Depends(get_db)):
-    if len(uniquecode) != 16:
-        raise HTTPException(status_code=422, detail="code incorrcet")
-
     await _create_new_code(uniquecode, db)
 
     digi_answer = await _get_verification_result(uniquecode)
+    if digi_answer.retval != 0:
+        text = f"AHTUNG!!! Bad check code \n{uniquecode=}"
+        logger.error(text)
+        await send_telegram_message(text)
+        return templates.TemplateResponse("codes/bad_check_result.html", {"request": request, "app_name": APP_NAME})
     issued_codes = await _get_issued_codes(digi_answer, db)
     if not issued_codes:
         try:
