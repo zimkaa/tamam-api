@@ -1,0 +1,5 @@
+docker run --rm -v alex_pgdata:/volume -v /tmp:/backup alpine tar -cjf /backup/alex_pgdata.tar.bz2 -C /volume ./
+
+
+
+docker run --rm -v alex_pgdata:/volume -v /tmp:/backup alpine sh -c "rm -rf /volume/* /volume/..?* /volume/.[!.]* ; tar -C /volume/ -xjf /backup/alex_pgdata.tar.bz2"

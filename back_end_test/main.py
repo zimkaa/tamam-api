@@ -1,3 +1,4 @@
+import uvicorn
 import json
 import os
 import random
@@ -17,8 +18,8 @@ from starlette.status import HTTP_303_SEE_OTHER, HTTP_302_FOUND
 from loguru import logger
 from faker import Faker
 
-from .config import settings
-from .response_model import empty_response_digiseller, ResponseDigiseller
+from config import settings
+from response_model import empty_response_digiseller, ResponseDigiseller
 
 
 logger.add("server.log", format="{time} {level} {message}", level="DEBUG", rotation="10 MB", compression="zip")
@@ -30,8 +31,6 @@ logger.add("server.log", format="{time} {level} {message}", level="DEBUG", rotat
 # create instance of the app
 test_app = FastAPI(title=settings.app_name)
 
-test_app.mount("/static", StaticFiles(directory="back_end_test/static"), name="static")
-templates = Jinja2Templates(directory="back_end_test/templates")
 PROJECT_PATH = Path(__file__).parent.resolve()
 fake = Faker()
 
@@ -107,9 +106,9 @@ async def send_answer(unique_code: str, token: str):
     # if not result:
     #     result = next(response_generator_stable)
 
-    # result = next(response_generator_stable)
+    result = next(response_generator_stable)
 
-    result = next(response_generator_stable_fail)
+    # result = next(response_generator_stable_fail)
 
     return JSONResponse(result.dict())
 
@@ -158,3 +157,7 @@ async def send_request():
 #     return templates.TemplateResponse(
 #         "codes/index.html", {"request": request, "app_name": settings.app_name, "code_list": codes}
 #     )
+
+
+if __name__ == "__main__":
+    uvicorn.run(test_app, host="0.0.0.0", port=5000)
