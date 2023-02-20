@@ -3,10 +3,11 @@ import json
 import os
 import random
 import string
-from typing import Any, Generator
+from typing import Any, Generator, Optional
 from pathlib import Path
 
 import httpx
+from pydantic import BaseModel, Field
 from fastapi import FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import ValidationError
@@ -18,11 +19,11 @@ from starlette.status import HTTP_303_SEE_OTHER, HTTP_302_FOUND
 from loguru import logger
 from faker import Faker
 
-from config import settings
-from response_model import empty_response_digiseller, ResponseDigiseller
+from config.config import settings
+from response_model.response_model import empty_response_digiseller, ResponseDigiseller
 
 
-logger.add("server.log", format="{time} {level} {message}", level="DEBUG", rotation="10 MB", compression="zip")
+logger.add("test-server.log", format="{time} {level} {message}", level="DEBUG", rotation="10 MB", compression="zip")
 
 #########################
 # BLOCK WITH API ROUTES #

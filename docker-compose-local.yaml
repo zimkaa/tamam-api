@@ -7,6 +7,7 @@ services:
     ports:
       - 8000:8000
     container_name: my_back_end
+    image: "my_back_end:${API_VERSION}"
     environment:
       - TEST_DIGISELLER_TOKEN=test_token
       - DIGISELLER_TOKEN=example

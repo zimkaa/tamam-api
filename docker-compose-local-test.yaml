@@ -6,7 +6,8 @@ services:
       - ./:/app
     ports:
       - 8000:8000
-    container_name: my_back_end
+    container_name: my_back_end_local
+    image: "my_back_end_local:${API_VERSION}"
     environment:
       - TEST_DIGISELLER_TOKEN=test_token
       - DIGISELLER_TOKEN=example
@@ -28,6 +29,7 @@ services:
     ports:
       - 5000:5000
     container_name: test-server
+    image: "test-server:${API_VERSION}"
     environment:
       - TEST_APP_NAME="test api server"
     depends_on:
@@ -36,7 +38,7 @@ services:
     networks:
       - custom
   db_app:
-    container_name: "db_app"
+    container_name: "db_app-test"
     image: postgres:14.1-alpine
     restart: always
     environment:
