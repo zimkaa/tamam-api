@@ -40,7 +40,7 @@ class CodeDAL:
             await send_telegram_message(text)
         return None
 
-    async def get_valide_code(self) -> list[tuple[Card]] | None:
+    async def get_valid_code(self) -> list[tuple[Card]] | None:
         """Get code that not used yet
 
         :return: list of Card elements or None

@@ -8,6 +8,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+CHANNEL_ID = os.getenv("CHANNEL_ID")
+
+TG_TOKEN = os.getenv("TG_TOKEN")
+
+TG_URL = os.getenv("TG_URL")
+
 APP_NAME = os.getenv("APP_NAME", "Code checker")
 
 DB_USER = os.getenv("DB_USER", "postgres")
@@ -36,21 +42,19 @@ TEST_DB_PORT = os.getenv("TEST_DB_PORT", "5433")
 # connect string for the test database
 TEST_DATABASE_URL = f"postgresql+asyncpg://{TEST_DB_USER}:{TEST_DB_PASS}@{TEST_DB_HOST}:{TEST_DB_PORT}/{TEST_DB_NAME}"
 
-DIGISELLER_TOKEN = os.getenv("DIGISELLER_TOKEN", "EXAMPLE")
+DIGISELLER_TOKEN = os.getenv("DIGISELLER_TOKEN", "DIGISELLER_TOKEN NOT IN GLOBAL VARIABLES")
+print(f"{DIGISELLER_TOKEN=}")
+
+DIGISELLER_ID = os.getenv("DIGISELLER_ID")
+
+APILOGIN_URL = os.getenv("APILOGIN_URL")
 
 TEST_DIGISELLER_TOKEN = os.getenv("TEST_DIGISELLER_TOKEN", "TEST_DIGISELLER_TOKEN")
 
-CHANNEL_ID = os.getenv("CHANNEL_ID")
-
-TG_TOKEN = os.getenv("TG_TOKEN")
-
-TG_URL = os.getenv("TG_URL")
-
-CHEK_CODE_URL = os.getenv(
-    "CHEK_CODE_URL", "https://api.digiseller.ru/api/purchases/unique-code/{unique_code}?token={token}"
+CHECK_CODE_URL = os.getenv(
+    "CHECK_CODE_URL", "https://api.digiseller.ru/api/purchases/unique-code/{unique_code}?token={token}"
 )
 
-TEST_CHEK_CODE_URL = os.getenv(
-    "TEST_CHEK_CODE_URL", "http://localhost:5000/api/purchases/unique-code/{unique_code}?token={token}"
+TEST_CHECK_CODE_URL = os.getenv(
+    "TEST_CHECK_CODE_URL", "http://localhost:5000/api/purchases/unique-code/{unique_code}?token={token}"
 )
-print(f"{TEST_CHEK_CODE_URL=}")
