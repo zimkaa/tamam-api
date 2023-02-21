@@ -47,7 +47,7 @@ print(f"{DIGISELLER_TOKEN=}")
 
 DIGISELLER_ID = os.getenv("DIGISELLER_ID")
 
-APILOGIN_URL = os.getenv("APILOGIN_URL")
+APILOGIN_URL = os.getenv("APILOGIN_URL", "https://api.digiseller.ru/api/apilogin")
 
 TEST_DIGISELLER_TOKEN = os.getenv("TEST_DIGISELLER_TOKEN", "TEST_DIGISELLER_TOKEN")
 
