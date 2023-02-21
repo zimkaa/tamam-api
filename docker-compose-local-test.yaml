@@ -16,8 +16,8 @@ services:
       - DB_HOST=db_app
       - DB_NAME=postgres
       - DB_PORT=5432
-      - CHEK_CODE_URL=https://api.digiseller.ru/api/purchases/unique-code/{unique_code}?token={token}
-      - TEST_CHEK_CODE_URL=http://test-server:5000/api/purchases/unique-code/{unique_code}?token={token}"
+      - CHECK_CODE_URL=https://api.digiseller.ru/api/purchases/unique-code/{unique_code}?token={token}
+      - TEST_CHECK_CODE_URL=http://test-server:5000/api/purchases/unique-code/{unique_code}?token={token}"
     depends_on:
       - db_app
     networks:
