@@ -16,15 +16,15 @@ TG_URL = os.getenv("TG_URL")
 
 APP_NAME = os.getenv("APP_NAME", "Code checker")
 
-DB_USER = os.getenv("DB_USER", "postgres")
+DB_USER = os.getenv("DB_USER")
 
-DB_PASS = os.getenv("DB_PASS", "postgres")
+DB_PASS = os.getenv("DB_PASS")
 
-DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_HOST = os.getenv("DB_HOST")
 
-DB_NAME = os.getenv("DB_NAME", "postgres")
+DB_NAME = os.getenv("DB_NAME")
 
-DB_PORT = os.getenv("DB_PORT", "5432")
+DB_PORT = os.getenv("DB_PORT")
 
 # connect string for the real database
 REAL_DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
