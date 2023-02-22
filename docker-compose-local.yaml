@@ -1,23 +1,23 @@
 version: "3.0"
 services:
-  app:
+  my_back_end:
     build: .
     volumes:
+      - www-html:/var/www/html
       - ./:/app
     ports:
       - 8000:8000
     container_name: my_back_end
     image: "my_back_end:${API_VERSION}"
+    restart: unless-stopped
     environment:
-      - DB_USER=postgres
-      - DB_PASS=postgres
       - DB_HOST=db_app
-      - DB_NAME=postgres
-      - DB_PORT=5432
-      - TEST_DIGISELLER_TOKEN=test_token
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_NAME=${DB_NAME}
+      - DB_PORT=${DB_PORT}
       - DIGISELLER_TOKEN=${DIGISELLER_TOKEN}
       - CHECK_CODE_URL=https://api.digiseller.ru/api/purchases/unique-code/{unique_code}?token={token}
-      - TEST_CHECK_CODE_URL=http://host.docker.internal:5000/api/purchases/unique-code/{unique_code}?token={token}"
     depends_on:
       - db_app
     networks:
@@ -25,7 +25,7 @@ services:
   db_app:
     container_name: "db_app"
     image: postgres:14.1-alpine
-    restart: always
+    restart: unless-stopped
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -36,9 +36,34 @@ services:
       - alex_pgdata:/var/lib/postgresql/data
     networks:
       - custom
+  nginx:
+    image: nginx:1.19.8-alpine
+    depends_on:
+      - my_back_end
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+      - "443:443"
+    volumes:
+      - www-html:/var/www/html
+      - ./nginx-conf.d:/etc/nginx/conf.d
+      - etc-letsencrypt:/etc/letsencrypt
+    networks:
+      - custom
+  certbot:
+    image: certbot/certbot
+    depends_on:
+      - nginx
+    container_name: certbot
+    volumes:
+      - etc-letsencrypt:/etc/letsencrypt
+      - www-html:/var/www/html
+    command: certonly --webroot --webroot-path=/var/www/html --email zimkaa87@gmail.com --agree-tos --no-eff-email -d rksok.ru
 networks:
   custom:
     driver: bridge
 volumes:
   alex_pgdata:
     external: true
+  etc-letsencrypt:
