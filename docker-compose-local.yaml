@@ -36,7 +36,7 @@ services:
     networks:
       - custom
   nginx:
-    image: nginx:1.19.8-alpine
+    image: nginx:latest
     depends_on:
       - my_back_end
     container_name: nginx
