@@ -15,6 +15,7 @@ TG_TOKEN = os.getenv("TG_TOKEN")
 print(f"{TG_TOKEN=}")
 
 TG_URL = os.getenv("TG_URL")
+print(f"{TG_URL=}")
 
 APP_NAME = os.getenv("APP_NAME", "Code checker")
 
@@ -55,6 +56,7 @@ DIGISELLER_ID = os.getenv("DIGISELLER_ID")
 print(f"{DIGISELLER_ID=}")
 
 APILOGIN_URL = os.getenv("APILOGIN_URL", "https://api.digiseller.ru/api/apilogin")
+print(f"{APILOGIN_URL=}")
 
 TEST_DIGISELLER_TOKEN = os.getenv("TEST_DIGISELLER_TOKEN", "TEST_DIGISELLER_TOKEN")
 
