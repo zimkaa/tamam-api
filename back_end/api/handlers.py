@@ -225,9 +225,10 @@ async def get_new_token():
 
 
 @user_router.get("/check-code")
-async def check_code(request: Request, uniquecode: str, db: AsyncSession = Depends(get_db)):
+async def check_code(request: Request, db: AsyncSession = Depends(get_db), uniquecode: str = None):
     await _create_new_code(uniquecode, db)
     try:
+        # TODO fix bug with autho
         await get_new_token()
     except Exception as error:
         logger.error("get_new_token()")
