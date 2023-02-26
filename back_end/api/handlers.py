@@ -218,7 +218,7 @@ async def get_new_token():
         TOKEN = response_dct["token"]
 
 
-@user_router.get("/check-code")
+@user_router.post("/check-code")
 async def check_code(request: Request, uniquecode: str, db: AsyncSession = Depends(get_db)):
     await _create_new_code(uniquecode, db)
     try:
