@@ -116,7 +116,7 @@ def main():
             session.flush()
 
     if text:
-        start = "Проверь код! Такой уже был добавлен!\n"
+        start = "Проверь код! Такой/такие уже был добавлен!\n"
         text_send = start + text
         send_message(text_send)
 

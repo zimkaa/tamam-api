@@ -116,7 +116,7 @@ async def _create_certificates_chain(order_amount: float, card_rows: list[tuple[
     card_list = list()
     amount = order_amount
     for card in card_rows:
-        logger.info(f"\n{card[0].amount=} {amount=}")
+        # logger.info(f"\n{card[0].amount=} {amount=}")
         if amount - card[0].amount > 0:
             amount -= card[0].amount
             card_list.append(card[0])
@@ -162,15 +162,19 @@ async def _write_verification_result(digi_answer: ResponseDigiseller, db) -> lis
 
             card_rows = await code_dal.get_valid_code()
             if card_rows is None:
-                text = f"AHTUNG!!! We don't have codes to sell. Customer paid for amount={digi_answer.amount}"
+                text = f"AHTUNG!!! We don't have codes to sell. Customer paid for value={digi_answer.options[0].value}"
                 logger.error(text)
                 await send_telegram_message(text)
                 raise NoCardError
 
-            give_away_list_cards = await _create_certificates_chain(digi_answer.amount, card_rows)
+            logger.debug(f"{digi_answer.options[0].value=}")
+            amount = int(digi_answer.options[0].value.replace(" TL", ""))
+            logger.debug(f"{type(amount)} {amount=}")
+            # give_away_list_cards = await _create_certificates_chain(digi_answer.options[0].value, card_rows)
+            give_away_list_cards = await _create_certificates_chain(amount, card_rows)
             logger.debug(f"{give_away_list_cards=}")
             if give_away_list_cards is None:
-                text = f"AHTUNG!!! We don't have codes to sell. Customer paid for amount={digi_answer.amount}"
+                text = f"AHTUNG!!! We don't have codes to sell. Customer paid for value={digi_answer.options[0].value}"
                 logger.error(text)
                 await send_telegram_message(text)
                 raise NoCardError
@@ -185,7 +189,9 @@ async def _write_verification_result(digi_answer: ResponseDigiseller, db) -> lis
                         f"card_id={card[0].card_id} card_code={card[0].card_code} amount={card[0].amount}\n"
                     )
                 message_string += f"inv={digi_answer.inv} email={digi_answer.email} time={datetime.datetime.utcnow()}"
-                text = f"AHTUNG!!! Can't write to db \namount={digi_answer.amount}\nused chain {message_string}"
+                text = (
+                    f"AHTUNG!!! Can't write to db \namount={digi_answer.options[0].value}\nused chain {message_string}"
+                )
                 logger.error(text)
                 await send_telegram_message(text)
                 raise WriteToDBError
@@ -229,6 +235,7 @@ async def check_code(request: Request, uniquecode: str, db: AsyncSession = Depen
         return TEMPLATES.TemplateResponse("codes/trouble.html", {"request": request, "app_name": APP_NAME})
 
     digi_answer_dict = await _get_verification_result(uniquecode)
+    logger.error(f"{digi_answer_dict=}")
     if digi_answer_dict["retval"] != 0:
         text = f"AHTUNG!!! Bad check code \n{uniquecode=}"
         logger.error(text)
