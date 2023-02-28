@@ -50,6 +50,7 @@ async def _create_new_code(code: str, db) -> None:
     :param db: db connection
     :type db: _type_
     """
+    logger.info("_create_new_code")
     async with db as session:
         async with session.begin():
             code_dal = CodeDAL(session)
@@ -69,6 +70,7 @@ async def _get_verification_result(code: str) -> dict:
     :return: answer from Digiseller
     :rtype: dict
     """
+    logger.info("_get_verification_result")
     try:
         async with httpx.AsyncClient() as client:
             url = CHECK_CODE_URL.format(token=TOKEN, unique_code=code)
@@ -95,6 +97,7 @@ async def _get_issued_codes(digi_answer: ResponseDigiseller, db) -> list[Card] |
     :return: true or false
     :rtype: bool
     """
+    logger.info("_get_issued_codes")
     async with db as session:
         async with session.begin():
             code_dal = CodeDAL(session)
@@ -113,6 +116,7 @@ async def _create_certificates_chain(order_amount: float, card_rows: list[tuple[
     :return: _description_
     :rtype: list[Card] | None
     """
+    logger.info("_create_certificates_chain")
     card_list = list()
     amount = order_amount
     for card in card_rows:
@@ -156,6 +160,7 @@ async def _write_verification_result(digi_answer: ResponseDigiseller, db) -> lis
     :return: _description_
     :rtype: str
     """
+    logger.info("_write_verification_result")
     async with db as session:
         async with session.begin():
             code_dal = CodeDAL(session)
@@ -199,6 +204,7 @@ async def _write_verification_result(digi_answer: ResponseDigiseller, db) -> lis
 
 
 def get_json_query_data():
+    logger.info("get_json_query_data")
     timestamp = time.time_ns()
     string = f"{DIGISELLER_TOKEN}{timestamp}"
     sign = hashlib.sha256(string.encode("utf-8")).hexdigest()
@@ -211,10 +217,14 @@ def get_json_query_data():
 
 
 async def get_new_token():
+    logger.info("get_new_token")
     async with httpx.AsyncClient() as client:
         json_data = get_json_query_data()
         logger.debug(f"{APILOGIN_URL=}")
         response = await client.post(APILOGIN_URL, data=json_data, headers=HEADERS)
+        logger.info(f"{response=}")
+        if response.status_code != 200:
+            await get_new_token()
         response_dct = response.json()
         if response_dct["retval"] != 0:
             text = f"AHTUNG!!! Bad get token \n{response_dct=}"
@@ -226,10 +236,11 @@ async def get_new_token():
 
 @user_router.get("/check-code")
 async def check_code(request: Request, db: AsyncSession = Depends(get_db), uniquecode: str = None):
+    logger.info("check_code")
     await _create_new_code(uniquecode, db)
     try:
-        # TODO fix bug with autho
-        await get_new_token()
+        # TODO fix bug with authorize
+        result = await get_new_token()
     except Exception as error:
         logger.error("get_new_token()")
         logger.error(f"{error=}")

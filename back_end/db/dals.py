@@ -20,6 +20,7 @@ class CodeDAL:
         self.db_session = db_session
 
     async def create_code(self, code: str) -> Code:
+        logger.info("create_code")
         new_code = Code(code=code)
         self.db_session.add(new_code)
         result = await self.db_session.flush()
@@ -27,6 +28,7 @@ class CodeDAL:
         return new_code
 
     async def check_code_in_db(self, inv) -> list[Card] | None:
+        logger.info("check_code_in_db")
         try:
             query = select(Card).where(Card.inv == inv)
             res = await self.db_session.execute(query)
@@ -46,6 +48,7 @@ class CodeDAL:
         :return: list of Card elements or None
         :rtype: list[tuple[Card]] | None
         """
+        logger.info("get_valid_code")
         try:
             query = select(Card).where(Card.is_received == False).order_by(Card.amount.desc())
             res = await self.db_session.execute(query)
@@ -60,6 +63,7 @@ class CodeDAL:
         return None
 
     async def update_card(self, card_id: UUID, **kwargs) -> UUID | None:
+        logger.info("update_card")
         logger.critical(f"{type(kwargs)} {kwargs=}")
         query = (
             update(Card)
@@ -86,6 +90,7 @@ class CodeDAL:
         :return: done or not
         :rtype: bool
         """
+        logger.info("update_card_row")
         try:
             for row in row_list:
                 rows_to_change = {
