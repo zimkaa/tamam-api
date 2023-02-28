@@ -62,7 +62,7 @@ services:
   #   volumes:
   #     - ./certbot/newconf:/etc/letsencrypt:rw
   #     - ./certbot/www:/var/www/certbot:rw
-  #   command: certonly --webroot --webroot-path=/var/www/certbot --email zimkaa87@gmail.com --agree-tos --no-eff-email -d rksok.ru
+  #   command: certonly --webroot --webroot-path=/var/www/certbot --email zimkaa87@gmail.com --agree-tos --no-eff-email -d tamam.games
 networks:
   custom:
     driver: bridge
