@@ -39,6 +39,15 @@ services:
       - alex_pgdata:/var/lib/postgresql/data
     networks:
       - custom
+  certbot:
+    image: certbot/certbot
+    depends_on:
+      - nginx
+    container_name: certbot
+    volumes:
+      - ./certbot/newconf:/etc/letsencrypt:rw
+      - ./certbot/www:/var/www/certbot:rw
+    command: certonly --webroot --webroot-path=/var/www/certbot --email zimkaa87@gmail.com --agree-tos --no-eff-email -d tamam.games
   nginx:
     image: nginx:latest
     depends_on:
@@ -54,15 +63,6 @@ services:
       - ./certbot/www:/var/www/certbot:ro
     networks:
       - custom
-  # certbot:
-  #   image: certbot/certbot
-  #   depends_on:
-  #     - nginx
-  #   container_name: certbot
-  #   volumes:
-  #     - ./certbot/newconf:/etc/letsencrypt:rw
-  #     - ./certbot/www:/var/www/certbot:rw
-  #   command: certonly --webroot --webroot-path=/var/www/certbot --email zimkaa87@gmail.com --agree-tos --no-eff-email -d tamam.games
 networks:
   custom:
     driver: bridge
