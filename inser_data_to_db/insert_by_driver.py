@@ -2,7 +2,7 @@
 from pprint import pprint
 import psycopg2
 
-conn = psycopg2.connect(database="postgres", user="postgres", password="postgres", host="127.0.0.1", port="5432")
+conn = psycopg2.connect(database="postgres", user="webwriter", password="<tcGfhjkz123", host="0.0.0.0", port="5432")
 
 conn.autocommit = True
 cursor = conn.cursor()
@@ -30,7 +30,7 @@ cursor.execute(sql3)
 for i in cursor.fetchall():
     print(i)
 
-sql4 = "SELECT card_code FROM details GROUP BY card_code HAVING count(*)>1;"
+sql4 = "SELECT card_code FROM card GROUP BY card_code HAVING count(*)>1;"
 cursor.execute(sql4)
 
 match_list = list()
