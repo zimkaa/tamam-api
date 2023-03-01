@@ -63,6 +63,23 @@ services:
       - ./certbot/www:/var/www/certbot:ro
     networks:
       - custom
+  sellerbot:
+    build:
+      context: ./sellerbot
+      dockerfile: Dockerfile
+    container_name: sellerbot
+    image: "sellerbot:${API_VERSION}"
+    restart: unless-stopped
+    environment:
+      - DB_HOST=db_app
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_NAME=${DB_NAME}
+      - DB_PORT=${DB_PORT}
+      - TG_URL=${TG_URL}
+      - TG_TOKEN=${TG_TOKEN}
+    depends_on:
+      - db_app
 networks:
   custom:
     driver: bridge
