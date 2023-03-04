@@ -28,7 +28,7 @@ from back_end.settings import DIGISELLER_ID
 from back_end.db.dals import CodeDAL
 from back_end.db.session import get_db
 from back_end.db.models import Card
-from back_end.utils.telegramm import send_telegram_message
+from back_end.utils.telegram import send_telegram_message
 
 
 TEMPLATES = Jinja2Templates(directory="back_end/templates")
@@ -105,12 +105,12 @@ async def _get_issued_codes(digi_answer: ResponseDigiseller, db) -> list[Card] |
     return issued_codes
 
 
-async def _create_certificates_chain(order_amount: float, card_rows: list[tuple[Card]]) -> list[Card] | None:
+async def _create_certificates_chain(order_amount: int, card_rows: list[tuple[Card]]) -> list[Card] | None:
     """Create chain of codes to give for client
     if amount not covered send massage to Telegramm
 
     :param order_amount: _description_
-    :type order_amount: float
+    :type order_amount: int
     :param card_rows: _description_
     :type card_rows: list[tuple[Card]]
     :return: _description_
@@ -134,6 +134,55 @@ async def _create_certificates_chain(order_amount: float, card_rows: list[tuple[
     logger.critical(text)
     await send_telegram_message(text)
     return None
+
+
+def _make_change(amount: int, card_rows: list[tuple[Card]]) -> list[Card]:
+    logger.info("_make_change")
+    denominations: dict[int, list[Card]] = dict()
+    card_list = list()
+    for card in card_rows:
+        if denominations.get(card[0].amount):
+            denominations[card[0].amount] += [card[0]]
+        else:
+            denominations[card[0].amount] = [card[0]]
+    result = {}
+    logger.trace(f"{card_rows=}")
+    if denominations.get(amount):
+        card = denominations.get(amount).pop()
+        card_list.append(card)
+        return card_list
+    if amount == 60 or amount == 80:
+        count = int(amount / 20)
+        if len_20 := denominations.get(20):
+            if len(len_20) >= count:
+                for _ in range(count):
+                    card = denominations.get(20).pop()
+
+                    card_list.append(card)
+        else:
+            logger.critical(f"No card to {amount=}")
+            raise NoCardError
+        return card_list
+    for denom in sorted(denominations.keys(), reverse=True):
+        while amount >= denom and len(denominations.get(denom, 0)) > 0:
+            if denom in result:
+                result[denom] += 1
+
+                card = denominations[denom].pop()
+
+                card_list.append(card)
+            else:
+                result[denom] = 1
+
+                card = denominations[denom].pop()
+
+                card_list.append(card)
+            amount -= denom
+    logger.critical(f"{type(result)} {result=}")
+    if amount > 0:
+        raise NoCardError
+    else:
+        return card_list
 
 
 class NoCardError(Exception):
@@ -175,8 +224,8 @@ async def _write_verification_result(digi_answer: ResponseDigiseller, db) -> lis
             logger.debug(f"{digi_answer.options[0].value=}")
             amount = int(digi_answer.options[0].value.replace(" TL", ""))
             logger.debug(f"{type(amount)} {amount=}")
-            # give_away_list_cards = await _create_certificates_chain(digi_answer.options[0].value, card_rows)
-            give_away_list_cards = await _create_certificates_chain(amount, card_rows)
+            # give_away_list_cards = await _create_certificates_chain(amount, card_rows)  # old version
+            give_away_list_cards = _make_change(amount, card_rows)
             logger.debug(f"{give_away_list_cards=}")
             if give_away_list_cards is None:
                 text = f"AHTUNG!!! We don't have codes to sell. Customer paid for value={digi_answer.options[0].value}"

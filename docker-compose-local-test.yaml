@@ -18,6 +18,7 @@ services:
       - TG_URL=${TG_URL}
       - TG_TOKEN=${TG_TOKEN}
       - CHANNEL_ID=${CHANNEL_ID}
+      - ADMIN_CHANNEL_ID=${ADMIN_CHANNEL_ID}
       - DIGISELLER_ID=${DIGISELLER_ID}
       - DIGISELLER_TOKEN=${DIGISELLER_TOKEN}
       - CHECK_CODE_URL=https://api.digiseller.ru/api/purchases/unique-code/{unique_code}?token={token}
@@ -54,6 +55,7 @@ services:
       - DB_PORT=${DB_PORT}
       - TG_URL=${TG_URL}
       - TG_TOKEN=${TG_TOKEN}
+      - ADMIN_CHANNEL_ID=${ADMIN_CHANNEL_ID}
     depends_on:
       - db_app
 networks:

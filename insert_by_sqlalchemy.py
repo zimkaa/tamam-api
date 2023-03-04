@@ -8,6 +8,7 @@ import csv
 import datetime
 import requests
 
+from loguru import logger
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import Column, String, Boolean, Integer, DateTime
@@ -40,6 +41,7 @@ DB_HOST = os.getenv("DB_HOST")
 DB_NAME = os.getenv("DB_NAME")
 DB_PORT = os.getenv("DB_PORT")
 CHANNEL_ID = os.getenv("CHANNEL_ID")
+ADMIN_CHANNEL_ID = os.getenv("ADMIN_CHANNEL_ID")
 TG_TOKEN = os.getenv("TG_TOKEN")
 TG_URL = os.getenv("TG_URL")
 
@@ -72,17 +74,34 @@ Base.metadata.create_all(engine)
 Session = sessionmaker(engine)
 
 
+# def send_message(text: str) -> None:
+#     method = TG_URL + TG_TOKEN + "/sendMessage"  # type: ignore
+#     response = requests.post(
+#         method,
+#         data={
+#             "chat_id": CHANNEL_ID,  # type: ignore
+#             "text": text,  # type: ignore
+#         },
+#     )
+#     if response.status_code != 200:
+#         raise Exception("Check codes!!! And we have some trouble with TG")
+
+
 def send_message(text: str) -> None:
     method = TG_URL + TG_TOKEN + "/sendMessage"  # type: ignore
-    response = requests.post(
-        method,
-        data={
-            "chat_id": CHANNEL_ID,  # type: ignore
-            "text": text,  # type: ignore
-        },
-    )
-    if response.status_code != 200:
-        raise Exception("Check codes!!! And we have some trouble with TG")
+    logger.debug("send_telegram_message:")
+    lst_id = ADMIN_CHANNEL_ID.split(",")
+    for chanel_id in lst_id:
+        logger.debug(f"{chanel_id=}")
+        query = requests.post(
+            method,
+            data={
+                "chat_id": chanel_id,  # type: ignore
+                "text": text,  # type: ignore
+            },
+        )
+    if query.status_code != 200:
+        raise Exception("Some trouble with TG")
 
 
 def check_duplicate(session: sessionmaker, card_code) -> None | str:
@@ -99,7 +118,7 @@ def main():
     text = ""
     with Session() as session:
         with session.begin():
-            file_path = os.path.join(PROJECT_PATH, "inser_data_to_db", f"{FILE_NAME}.csv")
+            file_path = os.path.join(PROJECT_PATH, "insert_data_to_db", f"{FILE_NAME}.csv")
             with open(file_path, "r") as file:
                 reader = csv.reader(file)
                 keys = next(reader)  # This skips the 1st row which is the header.

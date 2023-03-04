@@ -12,6 +12,9 @@ load_dotenv()
 CHANNEL_ID = os.getenv("CHANNEL_ID")
 # logger.info(f"{CHANNEL_ID=}")
 
+ADMIN_CHANNEL_ID = os.getenv("ADMIN_CHANNEL_ID")
+# logger.info(f"{ADMIN_CHANNEL_ID=}")
+
 TG_TOKEN = os.getenv("TG_TOKEN")
 # logger.info(f"{TG_TOKEN=}")
 

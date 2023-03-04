@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
 from back_end.db.models import Code, Card
-from back_end.utils.telegramm import send_telegram_message
+from back_end.utils.telegram import send_telegram_message
 
 ###########################################################
 # BLOCK FOR INTERACTION WITH DATABASE IN BUSINESS CONTEXT #

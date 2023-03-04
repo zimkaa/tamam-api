@@ -1,19 +1,19 @@
 import httpx
 from loguru import logger
 
-from src.settings import ADMIN_CHANNEL_ID
-from src.settings import CHANNEL_ID
-from src.settings import TG_TOKEN
-from src.settings import TG_URL
+from back_end.settings import ADMIN_CHANNEL_ID
+from back_end.settings import CHANNEL_ID
+from back_end.settings import TG_TOKEN
+from back_end.settings import TG_URL
 
 
 # async def send_telegram_message(text: str) -> None:
 #     async with httpx.AsyncClient() as client:
-#         method = TG_URL + TG_TOKEN + "/sendMessage"  # type: ignore
+#         method = settings.TG_URL + settings.TG_TOKEN + "/sendMessage"  # type: ignore
 #         response = await client.post(
 #             method,
 #             data={
-#                 "chat_id": CHANNEL_ID,
+#                 "chat_id": settings.CHANNEL_ID,
 #                 "text": text,
 #             },
 #         )
