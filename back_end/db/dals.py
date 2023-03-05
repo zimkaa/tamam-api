@@ -33,9 +33,14 @@ class CodeDAL:
             query = select(Card).where(Card.inv == inv)
             res = await self.db_session.execute(query)
             code_row = res.fetchall()
-            if code_row is not None:
+            if code_row:
                 logger.info(f"check_code_in_db code exist in DB {type(code_row)} {code_row=}")
                 return code_row
+            else:
+                text = f"check_code_in_db code not exist in DB {type(code_row)} {code_row=}"
+                logger.error(text)
+                await send_telegram_message(text)
+                return None
         except Exception as error:
             text = f"check_code_in_db unexpected error {error=}"
             logger.error(text)
