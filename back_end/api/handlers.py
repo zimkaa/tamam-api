@@ -179,6 +179,7 @@ def _make_change(amount: int, card_rows: list[tuple[Card]]) -> list[Card]:
                 card_list.append(card)
             amount -= denom
     logger.critical(f"{type(result)} {result=}")
+    logger.critical(f"{type(card_list)} {card_list=}")
     if amount > 0:
         raise NoCardError
     else:
@@ -309,6 +310,9 @@ async def check_code(request: Request, db: AsyncSession = Depends(get_db), uniqu
             answer = await _write_verification_result(digi_answer, db)
         except (NoCardError, WriteToDBError):
             logger.error("NoCardError, WriteToDBError")
+            text = f"AHTUNG!!! We don't have codes to sell. Customer paid for value={digi_answer.options[0].value}"
+            logger.error(text)
+            await send_telegram_message(text)
             return TEMPLATES.TemplateResponse("codes/trouble.html", {"request": request, "app_name": APP_NAME})
         except Exception as error:
             text = f"I don't know this trouble {error=}"
