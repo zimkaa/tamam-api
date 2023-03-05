@@ -80,6 +80,8 @@ services:
       - TG_URL=${TG_URL}
       - TG_TOKEN=${TG_TOKEN}
       - ADMIN_CHANNEL_ID=${ADMIN_CHANNEL_ID}
+    networks:
+      - custom
     depends_on:
       - db_app
 networks:

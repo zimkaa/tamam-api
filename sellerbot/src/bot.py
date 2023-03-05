@@ -7,6 +7,7 @@ from aiogram import Dispatcher
 from aiogram import types
 from aiogram.types.inline_keyboard import InlineKeyboardMarkup
 from aiogram.types.inline_keyboard import InlineKeyboardButton
+from loguru import logger
 
 from src.logic import write_verification_result
 from src.insert_by_sqlalchemy import message_write
@@ -63,6 +64,7 @@ async def send_pic(message: types.Message):
         with open(IMAGE_PATH, "rb") as img:
             await message.answer_photo(img)
     else:
+        logger.critical(f"{IMAGE_PATH=}")
         await message.answer("Техническая неполадка, попробуйте позже")
 
 
@@ -91,7 +93,9 @@ async def send_addcode(message: types.Message):
         arguments = message.get_args()
 
         list_arguments = arguments.split("\n")
+        logger.critical(f"{list_arguments=}")
         text = message_write(list_arguments)
+        logger.critical(f"{text=}")
         if text:
             test_message = f"Find {len(list_arguments)} codes \n" + text
             await message.answer(test_message)
