@@ -3,6 +3,7 @@ from pathlib import Path
 
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
+from loguru import logger
 
 from src.db.models import Card
 from src.settings import DB_USER
