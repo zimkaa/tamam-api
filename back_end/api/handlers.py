@@ -55,9 +55,14 @@ async def _create_new_code(code: str, db) -> None:
         async with session.begin():
             code_dal = CodeDAL(session)
             try:
-                await code_dal.create_code(code=code)
+                if code:
+                    await code_dal.create_code(code=code)
+                else:
+                    text = f"_create_new_code\n{code=}"
+                    logger.error(text)
+                    await send_telegram_message(text)
             except Exception as error:
-                text = f"_create_new_code some trouble with writing\n{error=}"
+                text = f"create_code some trouble with create\n{error=}"
                 logger.error(text)
                 await send_telegram_message(text)
 
@@ -274,6 +279,7 @@ async def get_new_token():
         response = await client.post(APILOGIN_URL, data=json_data, headers=HEADERS)
         logger.info(f"{response=}")
         if response.status_code != 200:
+            logger.info(f"do another try")
             await get_new_token()
         response_dct = response.json()
         if response_dct["retval"] != 0:
@@ -293,8 +299,7 @@ async def check_code(request: Request, uniquecode: str | None = None, db: AsyncS
         return {"result": "ok"}
     await _create_new_code(uniquecode, db)
     try:
-        # TODO fix bug with authorize
-        result = await get_new_token()
+        await get_new_token()
     except Exception as error:
         logger.error("get_new_token()")
         logger.error(f"{error=}")
