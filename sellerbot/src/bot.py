@@ -21,7 +21,7 @@ dp = Dispatcher(bot)
 
 my_user_db = {248598498: "Ник", 122274317: "Alex", 277594923: "Anton"}
 IMAGE_NAME = "tamam_bot.png"
-PROJECT_PATH = Path(__file__).parent.resolve()
+PROJECT_PATH = Path(__file__).parent.parent.resolve()
 IMAGE_PATH = os.path.join(PROJECT_PATH, "img", IMAGE_NAME)
 
 
