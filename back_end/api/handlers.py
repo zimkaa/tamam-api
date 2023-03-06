@@ -284,9 +284,13 @@ async def get_new_token():
         TOKEN = response_dct["token"]
 
 
+@user_router.post("/check-code")
 @user_router.get("/check-code")
-async def check_code(request: Request, db: AsyncSession = Depends(get_db), uniquecode: str = None):
+async def check_code(request: Request, uniquecode: str | None = None, db: AsyncSession = Depends(get_db)):
     logger.info("check_code")
+    if uniquecode is None:
+        logger.info("uniquecode is None")
+        return {"result": "ok"}
     await _create_new_code(uniquecode, db)
     try:
         # TODO fix bug with authorize
@@ -318,7 +322,7 @@ async def check_code(request: Request, db: AsyncSession = Depends(get_db), uniqu
             text = f"I don't know this trouble {error=}"
             logger.error(text)
             await send_telegram_message(text)
-            return "I don't know this trouble"
+            return TEMPLATES.TemplateResponse("codes/trouble.html", {"request": request, "app_name": APP_NAME})
     else:
         answer = []
         for card_row in issued_codes:
