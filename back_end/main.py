@@ -20,6 +20,9 @@ logger.add("server.log", format="{time} {level} {message}", level="DEBUG", rotat
 app = FastAPI(title=APP_NAME)
 app.mount("/static", StaticFiles(directory="back_end/static"), name="static")
 
+# static index page on rout /
+app.mount("/", StaticFiles(directory="back_end/site", html=True), name="site")
+
 
 @app.exception_handler(ValidationError)
 async def validation_exception_handler(request: Request, exc: ValidationError):
