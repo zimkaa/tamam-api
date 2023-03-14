@@ -24,6 +24,7 @@ class CodeDAL:
         new_code = Code(code=code)
         self.db_session.add(new_code)
         result = await self.db_session.flush()
+        # TODO WTF???? why result=None????
         logger.debug(f"{result=}")
         return new_code
 

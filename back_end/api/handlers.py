@@ -81,14 +81,27 @@ async def _get_verification_result(code: str) -> dict:
             url = CHECK_CODE_URL.format(token=TOKEN, unique_code=code)
             logger.debug(f"{url=}")
             response = await client.get(url)
-            logger.critical(f"_get_verification_result {response.text=}")
-            digi_answer = json.loads(response.content)
-            logger.debug(f"{digi_answer=}")
+            logger.error(f"{response.status_code=}")
+            json_response = response.json()
+            logger.debug(f"{json_response=}")
+            if json_response.get("retval") != 0:
+                text = (
+                    f"_get_verification_result trouble with query to Digiseller retval={json_response.get('retval')} "
+                    f"desc={json_response.get('desc')} "
+                    f"digi code = {code}"
+                )
+                logger.error(text)
+                await send_telegram_message(text)
+                digi_answer = {}
+            else:
+                logger.critical(f"_get_verification_result {response.text=}")
+                digi_answer = json.loads(response.content)
+                logger.debug(f"{digi_answer=}")
     except Exception as error:
-        text = f"_get_verification_result trouble with query to Digiseller {error=}"
+        text = f"_get_verification_result do another try to check transaction from digiseller because was {error=}"
         logger.error(text)
         await send_telegram_message(text)
-        digi_answer = {}
+        await _get_verification_result(code)
     return digi_answer
 
 
@@ -273,25 +286,40 @@ def get_json_query_data():
 
 async def get_new_token():
     logger.info("get_new_token")
-    async with httpx.AsyncClient() as client:
-        json_data = get_json_query_data()
-        logger.debug(f"{APILOGIN_URL=}")
-        response = await client.post(APILOGIN_URL, data=json_data, headers=HEADERS)
-        logger.info(f"{response=}")
-        if response.status_code != 200:
-            logger.info(f"do another try")
-            await get_new_token()
-        response_dct = response.json()
-        if response_dct["retval"] != 0:
-            text = f"AHTUNG!!! Bad get token \n{response_dct=}"
-            logger.error(text)
-            await send_telegram_message(text)
-        global TOKEN
-        TOKEN = response_dct["token"]
+    try:
+        async with httpx.AsyncClient() as client:
+            json_data = get_json_query_data()
+            logger.debug(f"{APILOGIN_URL=}")
+            response = await client.post(APILOGIN_URL, data=json_data, headers=HEADERS)
+            logger.info(f"{response.status_code=}")
+            if response.status_code != 200:
+                json_response = response.json()
+                logger.debug(f"{json_response=}")
+                text = f"failed to get new token retval={json_response.get('retval')} desc={json_response.get('desc')}"
+                logger.error(text)
+                await send_telegram_message(text)
+            response_dct = response.json()
+            if response_dct["retval"] != 0:
+                text = f"AHTUNG!!! Bad get token \n{response_dct=}"
+                logger.error(text)
+                await send_telegram_message(text)
+            global TOKEN
+            TOKEN = response_dct["token"]
+            logger.info(f"installed new {TOKEN=}")
+    except Exception as error:
+        text = f"do another try to get new token previous {error=}"
+        logger.error(text)
+        await send_telegram_message(text)
+        await get_new_token()
 
 
-@user_router.post("/check-code")
+@user_router.get("/")
+async def get_index(request: Request):
+    return TEMPLATES.TemplateResponse("pages/index.html", {"request": request, "title": "Tamam.Games"})
+
+
 @user_router.get("/check-code")
+@user_router.post("/check-code")
 async def check_code(request: Request, uniquecode: str | None = None, db: AsyncSession = Depends(get_db)):
     logger.info("check_code")
     if uniquecode is None:
@@ -303,15 +331,16 @@ async def check_code(request: Request, uniquecode: str | None = None, db: AsyncS
     except Exception as error:
         logger.error("get_new_token()")
         logger.error(f"{error=}")
-        return TEMPLATES.TemplateResponse("codes/trouble.html", {"request": request, "app_name": APP_NAME})
+        return TEMPLATES.TemplateResponse(
+            "pages/no_codes.html", {"request": request, "title": "No codes", "digi_code": uniquecode}
+        )
 
     digi_answer_dict = await _get_verification_result(uniquecode)
     logger.error(f"{digi_answer_dict=}")
-    if digi_answer_dict["retval"] != 0:
-        text = f"AHTUNG!!! Bad check code \n{uniquecode=}"
-        logger.error(text)
-        await send_telegram_message(text)
-        return TEMPLATES.TemplateResponse("codes/bad_check_result.html", {"request": request, "app_name": APP_NAME})
+    if not digi_answer_dict or digi_answer_dict["retval"] != 0:
+        return TEMPLATES.TemplateResponse(
+            "pages/no_codes.html", {"request": request, "title": "No codes", "digi_code": uniquecode}
+        )
     digi_answer = ResponseDigiseller(**digi_answer_dict)
     issued_codes = await _get_issued_codes(digi_answer, db)
     if not issued_codes:
@@ -322,16 +351,20 @@ async def check_code(request: Request, uniquecode: str | None = None, db: AsyncS
             text = f"AHTUNG!!! We don't have codes to sell. Customer paid for value={digi_answer.options[0].value}"
             logger.error(text)
             await send_telegram_message(text)
-            return TEMPLATES.TemplateResponse("codes/trouble.html", {"request": request, "app_name": APP_NAME})
+            return TEMPLATES.TemplateResponse(
+                "pages/no_codes.html", {"request": request, "title": "No codes", "digi_code": uniquecode}
+            )
         except Exception as error:
             text = f"I don't know this trouble {error=}"
             logger.error(text)
             await send_telegram_message(text)
-            return TEMPLATES.TemplateResponse("codes/trouble.html", {"request": request, "app_name": APP_NAME})
+            return TEMPLATES.TemplateResponse(
+                "pages/no_codes.html", {"request": request, "title": "No codes", "digi_code": uniquecode}
+            )
     else:
         answer = []
         for card_row in issued_codes:
             answer.append(card_row[0])
     return TEMPLATES.TemplateResponse(
-        "codes/index.html", {"request": request, "app_name": APP_NAME, "code_list": answer}
+        "pages/your_codes.html", {"request": request, "title": "You codes", "code_list": answer}
     )

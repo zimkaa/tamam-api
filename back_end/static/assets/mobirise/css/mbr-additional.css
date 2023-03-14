@@ -719,71 +719,117 @@ a {
 .cid-txCW60BmGr .mbr-section-btn {
   color: #ffffff;
 }
-.cid-s48P1Icc8J {
-  padding-top: 2rem;
-  padding-bottom: 2rem;
-  background-color: #232323;
+.cid-typtlpe0we {
+  padding-top: 6rem;
+  padding-bottom: 6rem;
+  background-image: url("../../../assets/images/fon-1170x780.png");
 }
-.cid-s48P1Icc8J .row-links {
+.cid-typtlpe0we .mbr-fallback-image.disabled {
+  display: none;
+}
+.cid-typtlpe0we .mbr-fallback-image {
+  display: block;
+  background-size: cover;
+  background-position: center center;
   width: 100%;
-  justify-content: center;
+  height: 100%;
+  position: absolute;
+  top: 0;
 }
-.cid-s48P1Icc8J .social-row {
-  width: 100%;
-  justify-content: center;
+.cid-typtlpe0we .content-wrapper {
+  background: #000000;
 }
-.cid-s48P1Icc8J .media-container-row {
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-.cid-s48P1Icc8J .media-container-row .foot-menu {
-  list-style: none;
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  padding: 0;
-  margin-bottom: 0;
-}
-.cid-s48P1Icc8J .media-container-row .foot-menu li {
-  padding: 0 1rem 1rem 1rem;
-}
-.cid-s48P1Icc8J .media-container-row .foot-menu li p {
-  margin: 0;
-}
-.cid-s48P1Icc8J .media-container-row .social-list {
-  padding-left: 0;
-  margin-bottom: 0;
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-.cid-s48P1Icc8J .media-container-row .social-list .mbr-iconfont-social {
-  font-size: 1.5rem;
-  color: #ffffff;
-}
-.cid-s48P1Icc8J .media-container-row .social-list .soc-item {
-  margin: 0 .5rem;
-}
-.cid-s48P1Icc8J .media-container-row .social-list a {
-  margin: 0;
-  opacity: .5;
-  transition: .2s linear;
-}
-.cid-s48P1Icc8J .media-container-row .social-list a:hover {
-  opacity: 1;
-}
-@media (max-width: 767px) {
-  .cid-s48P1Icc8J .media-container-row .social-list {
-    -webkit-justify-content: center;
-    justify-content: center;
+@media (max-width: 991px) {
+  .cid-typtlpe0we .content-wrapper .row {
+    flex-direction: column-reverse;
+  }
+  .cid-typtlpe0we .content-wrapper .image-wrapper {
+    margin-bottom: 2rem;
   }
 }
-.cid-s48P1Icc8J .media-container-row .row-copirayt {
-  word-break: break-word;
-  width: 100%;
+@media (max-width: 767px) {
+  .cid-typtlpe0we .content-wrapper {
+    padding: 1rem;
+  }
 }
-.cid-s48P1Icc8J .media-container-row .row-copirayt p {
+@media (min-width: 768px) and (max-width: 991px) {
+  .cid-typtlpe0we .content-wrapper {
+    padding: 2rem;
+  }
+}
+@media (min-width: 992px) {
+  .cid-typtlpe0we .content-wrapper {
+    padding: 5rem 3rem;
+  }
+  .cid-typtlpe0we .content-wrapper .text-wrapper {
+    padding-right: 2rem;
+  }
+}
+.cid-typtlpe0we .image-wrapper img {
   width: 100%;
+  object-fit: cover;
+}
+.cid-typtlpe0we .card-title {
+  color: #ffffff;
+}
+.cid-typtlpe0we .mbr-text,
+.cid-typtlpe0we .mbr-section-btn {
+  color: #ffffff;
+}
+.cid-typtxQ5qYS {
+  padding-top: 6rem;
+  padding-bottom: 6rem;
+  background-image: url("../../../assets/images/fon-1170x780.png");
+}
+.cid-typtxQ5qYS .mbr-fallback-image.disabled {
+  display: none;
+}
+.cid-typtxQ5qYS .mbr-fallback-image {
+  display: block;
+  background-size: cover;
+  background-position: center center;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+}
+.cid-typtxQ5qYS .content-wrapper {
+  background: #000000;
+}
+@media (max-width: 991px) {
+  .cid-typtxQ5qYS .content-wrapper .row {
+    flex-direction: column-reverse;
+  }
+  .cid-typtxQ5qYS .content-wrapper .image-wrapper {
+    margin-bottom: 2rem;
+  }
+}
+@media (max-width: 767px) {
+  .cid-typtxQ5qYS .content-wrapper {
+    padding: 1rem;
+  }
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .cid-typtxQ5qYS .content-wrapper {
+    padding: 2rem;
+  }
+}
+@media (min-width: 992px) {
+  .cid-typtxQ5qYS .content-wrapper {
+    padding: 5rem 3rem;
+  }
+  .cid-typtxQ5qYS .content-wrapper .text-wrapper {
+    padding-right: 2rem;
+  }
+}
+.cid-typtxQ5qYS .image-wrapper img {
+  width: 100%;
+  object-fit: cover;
+}
+.cid-typtxQ5qYS .card-title {
+  color: #ffffff;
+}
+.cid-typtxQ5qYS .mbr-text,
+.cid-typtxQ5qYS .mbr-section-btn {
+  color: #ffffff;
 }

@@ -1,0 +1,33 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+<section data-bs-version="5.1" class="features15 cid-typtxQ5qYS" id="features16-q">
+
+    
+
+    
+    <div class="mbr-overlay" style="opacity: 0.5; background-color: rgb(133, 88, 127);">
+    </div>
+    <div class="container">
+        <div class="content-wrapper">
+            <div class="row align-items-center">
+                <div class="col-12 col-lg">
+                    <div class="text-wrapper">
+                        <h6 class="card-title mbr-fonts-style display-2"><strong>Что-то пошло не так.</strong></h6>
+                        <p class="mbr-text mbr-fonts-style mb-4 display-4">Мы не можем выдать ваши коды прямо сейчас. Администратор уже в курсе и работает над этой проблемой. Свяжитесь с администратором в телеграмме по ссылке ниже и сообщите ваш уникальный код покупки.&nbsp;<br><br>Something went wrong.
+<br>We can't issue your codes right now. The administrator is already aware and working on this issue. Contact the administrator in the telegram using the link below and provide your unique purchase code.<br><br>{{ digi_code }}</p>
+                        <div class="mbr-section-btn mt-3"><a class="btn btn-black display-4" href="https://t.me/TamamGamesBot"><span class="socicon socicon-telegram mbr-iconfont mbr-iconfont-btn"></span>TamamGamesBot<br></a></div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <div class="image-wrapper">
+                        <img src="{{ url_for('static', path='assets/images/logo1-1160x1160.jpg') }}" alt="Mobirise Website Builder">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section><script src="{{ url_for('static', path='assets/bootstrap/js/bootstrap.bundle.min.js') }}"></script>  <script src="{{ url_for('static', path='assets/smoothscroll/smooth-scroll.js') }}"></script>  <script src="{{ url_for('static', path='assets/ytplayer/index.js') }}"></script>  <script src="{{ url_for('static', path='assets/theme/js/script.js') }}"></script>
+
+{% endblock content %}
