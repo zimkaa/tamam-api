@@ -1,4 +1,6 @@
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI
+from fastapi import Request
+from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import ValidationError
 from starlette.staticfiles import StaticFiles
@@ -18,10 +20,7 @@ logger.add("server.log", format="{time} {level} {message}", level="DEBUG", rotat
 
 # create instance of the app
 app = FastAPI(title=APP_NAME)
-app.mount("/static", StaticFiles(directory="back_end/static"), name="static")
-
-# # static index page on rout /
-# app.mount("/", StaticFiles(directory="back_end/site", html=True), name="site")
+app.mount("/static", StaticFiles(directory="back_end/static", html=True), name="static")
 
 
 @app.exception_handler(ValidationError)
