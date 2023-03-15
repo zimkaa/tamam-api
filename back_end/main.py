@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi import status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import ValidationError
 from starlette.staticfiles import StaticFiles
@@ -21,6 +22,23 @@ logger.add("server.log", format="{time} {level} {message}", level="DEBUG", rotat
 # create instance of the app
 app = FastAPI(title=APP_NAME)
 app.mount("/static", StaticFiles(directory="back_end/static", html=True), name="static")
+
+origins = [
+    "http://localhost.tiangolo.com",
+    "https://localhost.tiangolo.com",
+    "http://localhost",
+    "http://localhost:8000",
+    "http://0.0.0.0",
+    "http://0.0.0.0:8000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.exception_handler(ValidationError)
