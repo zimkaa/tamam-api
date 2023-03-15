@@ -10,7 +10,7 @@ if __name__ == "__main__":
         app,
         host="0.0.0.0",
         port=8000,
-        # TODO for local tests
+        # TODO for local tests https
         # ssl_keyfile="./certbot/newconf/live/tamam.games/privkey.pem",
         # ssl_certfile="./certbot/newconf/live/tamam.games/fullchain.pem",
     )
