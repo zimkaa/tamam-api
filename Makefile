@@ -1,4 +1,6 @@
 old-up:
+	python3 ./back_end/build.py
+	./version.sh
 	docker compose -f docker-compose-local.yaml up -d
 
 up-test:
@@ -7,12 +9,12 @@ up-test:
 	docker compose -f docker-compose-local-test.yaml up -d
 
 old-build:
-	python3 ./back_end/build.py -p
+	python3 ./back_end/build.py
 	./version.sh
 	docker compose -f docker-compose-local.yaml up -d --build
 
 old-build-without-d:
-	python3 ./back_end/build.py -p
+	python3 ./back_end/build.py
 	./version.sh
 	docker compose -f docker-compose-local.yaml up --build
 
