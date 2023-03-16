@@ -164,7 +164,6 @@ def _make_change(amount: int, card_rows: list[tuple[Card]]) -> list[Card]:
         else:
             denominations[card[0].amount] = [card[0]]
     result = {}
-    logger.trace(f"{card_rows=}")
     if denominations.get(amount):
         card = denominations.get(amount).pop()
         card_list.append(card)
@@ -258,9 +257,12 @@ async def _write_verification_result(digi_answer: ResponseDigiseller, db) -> lis
             if not updated_true:
                 message_string = ""
                 for card in give_away_list_cards:
-                    message_string += (
-                        f"card_id={card[0].card_id} card_code={card[0].card_code} amount={card[0].amount}\n"
-                    )
+                    logger.debug(f"{type(card)}")
+                    logger.debug(f"{card=}")
+                    # message_string += (
+                    #     f"card_id={card[0].card_id} card_code={card[0].card_code} amount={card[0].amount}\n"
+                    # )
+                    message_string += f"card_id={card.card_id} card_code={card.card_code} amount={card.amount}\n"
                 message_string += f"inv={digi_answer.inv} email={digi_answer.email} time={datetime.datetime.utcnow()}"
                 text = (
                     f"AHTUNG!!! Can't write to db \namount={digi_answer.options[0].value}\nused chain {message_string}"
@@ -336,7 +338,7 @@ async def check_code(request: Request, uniquecode: str | None = None, db: AsyncS
         )
 
     digi_answer_dict = await _get_verification_result(uniquecode)
-    logger.error(f"{digi_answer_dict=}")
+    # logger.error(f"{digi_answer_dict=}")
     if not digi_answer_dict or digi_answer_dict["retval"] != 0:
         return TEMPLATES.TemplateResponse(
             "pages/no_codes.html", {"request": request, "title": "No codes", "digi_code": uniquecode}
@@ -355,6 +357,7 @@ async def check_code(request: Request, uniquecode: str | None = None, db: AsyncS
                 "pages/no_codes.html", {"request": request, "title": "No codes", "digi_code": uniquecode}
             )
         except Exception as error:
+            # TODO need understand whats is problem
             text = f"I don't know this trouble {error=}"
             logger.error(text)
             await send_telegram_message(text)
