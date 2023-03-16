@@ -1,0 +1,4 @@
+
+linux copy from server to local
+
+scp root@185.180.230.200:/root/projects/tamam-api/server.log /home/anton/PetProject/NL/alexander/server-from.log
