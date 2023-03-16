@@ -57,7 +57,6 @@ class CodeDAL:
             res = await self.db_session.execute(query)
             code_rows = res.fetchall()
             if code_rows is not None:
-                logger.trace(f"{code_rows=}")
                 return code_rows
         except Exception as error:
             text = f"update_card_row unexpected error {error=}"

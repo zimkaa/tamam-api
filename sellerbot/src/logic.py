@@ -31,7 +31,6 @@ def _make_change(amount: int, card_rows: list[tuple[Card]]) -> list[Card]:
         else:
             denominations[card[0].amount] = [card[0]]
     result = {}
-    logger.trace(f"{card_rows=}")
     if denominations.get(amount):
         card = denominations.get(amount).pop()
         card_list.append(card)
