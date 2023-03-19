@@ -23,6 +23,7 @@ class WriteToDBError(Exception):
 
 def _make_change(amount: int, card_rows: list[tuple[Card]]) -> list[Card]:
     logger.info("_make_change")
+    # TODO должен в порядке убывания
     denominations: dict[int, list[Card]] = dict()
     card_list = list()
     for card in card_rows:
@@ -68,6 +69,35 @@ def _make_change(amount: int, card_rows: list[tuple[Card]]) -> list[Card]:
         raise NoCardError
     else:
         return card_list
+
+
+async def get_text_not_used_code() -> str:
+    code_dict = await get_sorted_not_used_code()
+    text = [f"{amount} - {count}" for amount, count in code_dict.items()]
+    text_messages = "\n".join(text)
+    return text_messages
+
+
+async def get_sorted_not_used_code() -> dict[int, list[Card]]:
+    logger.info("get_sorted_not_used_code")
+    db = async_session()
+    async with db as session:
+        async with session.begin():
+            code_dal = CodeDAL(session)
+
+            card_rows = await code_dal.get_valid_code()
+            if card_rows is None:
+                text = "AHTUNG!!! We don't have any empty code"
+                logger.error(text)
+                await send_telegram_message(text)
+
+            denominations: dict[int, list[Card]] = dict()
+            for card in card_rows:
+                if denominations.get(card[0].amount):
+                    denominations[card[0].amount] += 1
+                else:
+                    denominations[card[0].amount] = 1
+    return denominations
 
 
 async def write_verification_result(needed_amount: int) -> list[Card]:

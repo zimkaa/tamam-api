@@ -12,6 +12,7 @@ from loguru import logger
 
 from src.logic import write_verification_result
 from src.logic import message_write
+from src.logic import get_text_not_used_code
 from src.settings import TG_TOKEN
 
 
@@ -104,6 +105,15 @@ async def send_help(message: types.Message):
     This handler will be called when user sends `/help` command
     """
     text = "/help - подсказка\nСтрого следуйте формату запросов, не используйте лишние пробелы и переводы строк!"
+    await message.answer(text)
+
+
+@dp.message_handler(commands=["getempty"])
+async def send_empty(message: types.Message):
+    """
+    This handler will be called when user sends `/getempty` command
+    """
+    text = await get_text_not_used_code()
     await message.answer(text)
 
 
