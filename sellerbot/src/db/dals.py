@@ -7,7 +7,6 @@ from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
-from src.db.models import Code
 from src.db.models import Card
 from src.utils.telegram import send_telegram_message
 
@@ -22,13 +21,30 @@ class CodeDAL:
     def __init__(self, db_session: AsyncSession):
         self.db_session = db_session
 
-    async def create_code(self, code: str) -> Code:
-        logger.info("create_code")
-        new_code = Code(code=code)
-        self.db_session.add(new_code)
-        result = await self.db_session.flush()
-        logger.debug(f"{result=}")
-        return new_code
+    async def check_duplicate(self, card_code: str) -> bool:
+        logger.info("check_duplicate")
+        try:
+            query = select(Card).where(Card.card_code == card_code)
+            res = await self.db_session.execute(query)
+            code_row = res.fetchone()
+            if code_row is None:
+                return False
+        except Exception as error:
+            text = f"check_duplicate unexpected error {error=}"
+            logger.error(text)
+            await send_telegram_message(text)
+        return True
+
+    async def add_new_card(self, new_code: Card) -> None:
+        logger.info("add_new_card")
+        try:
+            self.db_session.add(new_code)
+            result = await self.db_session.flush()
+            logger.debug(f"{result=}")
+        except Exception as error:
+            text = f"add_new_card unexpected error {error=}"
+            logger.error(text)
+            await send_telegram_message(text)
 
     async def check_code_in_db(self, inv) -> list[Card] | None:
         logger.info("check_code_in_db")
