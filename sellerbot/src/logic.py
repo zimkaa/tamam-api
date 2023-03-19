@@ -1,3 +1,4 @@
+import csv
 import datetime
 
 from loguru import logger
@@ -5,7 +6,6 @@ from loguru import logger
 from src.db.dals import CodeDAL
 from src.db.models import Card
 from src.db.session import async_session
-
 from src.utils.telegram import send_telegram_message
 
 
@@ -64,6 +64,7 @@ def _make_change(amount: int, card_rows: list[tuple[Card]]) -> list[Card]:
             amount -= denom
     logger.critical(f"{type(result)} {result=}")
     if amount > 0:
+        logger.critical(f"No card to {amount=}")
         raise NoCardError
     else:
         return card_list
@@ -83,9 +84,10 @@ async def write_verification_result(needed_amount: int) -> list[Card]:
                 await send_telegram_message(text)
                 raise NoCardError
 
-            give_away_list_cards = _make_change(needed_amount, card_rows)
-            logger.debug(f"{give_away_list_cards=}")
-            if give_away_list_cards is None:
+            try:
+                give_away_list_cards = _make_change(needed_amount, card_rows)
+                logger.debug(f"{give_away_list_cards=}")
+            except NoCardError:
                 text = f"AHTUNG!!! We don't have codes to sell. Customer paid for {needed_amount=}"
                 logger.error(text)
                 await send_telegram_message(text)
@@ -105,3 +107,30 @@ async def write_verification_result(needed_amount: int) -> list[Card]:
                 await send_telegram_message(text)
                 raise WriteToDBError
             return give_away_list_cards
+
+
+async def message_write(message: list[str]) -> None | str:
+    text = ""
+    duplicates_count = 0
+    db = async_session()
+    async with db as session:
+        async with session.begin():
+            code_dal = CodeDAL(session)
+            reader = csv.reader(message)
+            keys = ["card_code", "amount", "amount_tl"]
+            for record in reader:
+                data_to_write = dict(zip(keys, [record[0], int(record[1]), int(record[2])]))
+                new_card = Card(**data_to_write)
+                logger.error(f"{type(new_card.amount)} {new_card.amount=}")
+                logger.error(f"{type(new_card.amount_tl)} {new_card.amount_tl=}")
+                duplicate = await code_dal.check_duplicate(new_card.card_code)
+                if duplicate:
+                    text += f"{new_card.card_code}\n"
+                    duplicates_count += 1
+                else:
+                    await code_dal.add_new_card(new_card)
+
+    if text:
+        start = "Такой/такие уже был добавлен!\n"
+        text_send = start + text + f"\nDuplicates count: {duplicates_count}"
+        return text_send
