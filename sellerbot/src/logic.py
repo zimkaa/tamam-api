@@ -73,7 +73,7 @@ def _make_change(amount: int, card_rows: list[tuple[Card]]) -> list[Card]:
 
 async def get_text_not_used_code() -> str:
     code_dict = await get_sorted_not_used_code()
-    text = [f"{amount} - {count}" for amount, count in code_dict.items()]
+    text = [f"{amount}TL = {count}штук" for amount, count in code_dict.items()]
     text_messages = "\n".join(text)
     return text_messages
 
