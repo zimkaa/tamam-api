@@ -145,3 +145,30 @@ def test_make_change_with_two_nominals(amount, expected_result, variants, denomi
     assert len(res) == expected_result
     for card in res:
         assert card.amount in variants
+
+
+@pytest.fixture
+def denominations_double_test():
+    return [
+        (Card(amount=50),),
+        (Card(amount=50),),
+        #
+        (Card(amount=100),),
+        (Card(amount=100),),
+    ]
+
+
+@pytest.mark.parametrize(
+    "amount, expected_result, variants",
+    [
+        (150, 2, (100, 50)),
+    ],
+)
+def test_make_change_with_two_nominals2(amount, expected_result, variants, denominations_double_test):
+    print(f"\n{amount=} {denominations_double_test=}\n")
+    res = _make_change(amount, denominations_double_test)
+    print(f"\n{res[0].amount=}\n")
+    print(f"\n{res[1].amount=}\n")
+    assert len(res) == expected_result
+    for card in res:
+        assert card.amount in variants
