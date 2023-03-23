@@ -5,11 +5,8 @@ import time
 
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
 from fastapi import Request
 
-# from starlette.responses import RedirectResponse
-# from starlette.status import HTTP_302_FOUND
 import httpx
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,10 +14,7 @@ from starlette.templating import Jinja2Templates
 
 from .models import ResponseDigiseller
 
-from back_end.settings import APP_NAME
 from back_end.settings import APILOGIN_URL
-from back_end.settings import TEST_CHECK_CODE_URL
-from back_end.settings import TEST_DIGISELLER_TOKEN
 from back_end.settings import DIGISELLER_TOKEN
 from back_end.settings import CHECK_CODE_URL
 from back_end.settings import DIGISELLER_ID
@@ -163,7 +157,7 @@ def _make_change(amount: int, card_rows: list[tuple[Card]]) -> list[Card]:
             denominations[card[0].amount] += [card[0]]
         else:
             denominations[card[0].amount] = [card[0]]
-    result = {}
+    result: dict[int, int] = {}
     if denominations.get(amount):
         card = denominations.get(amount).pop()
         card_list.append(card)
@@ -174,7 +168,6 @@ def _make_change(amount: int, card_rows: list[tuple[Card]]) -> list[Card]:
             if len(len_20) >= count:
                 for _ in range(count):
                     card = denominations.get(20).pop()
-
                     card_list.append(card)
         else:
             logger.critical(f"No card to {amount=}")
@@ -184,20 +177,17 @@ def _make_change(amount: int, card_rows: list[tuple[Card]]) -> list[Card]:
         while amount >= denom and len(denominations.get(denom, 0)) > 0:
             if denom in result:
                 result[denom] += 1
-
                 card = denominations[denom].pop()
-
                 card_list.append(card)
             else:
                 result[denom] = 1
-
                 card = denominations[denom].pop()
-
                 card_list.append(card)
             amount -= denom
     logger.critical(f"{type(result)} {result=}")
     logger.critical(f"{type(card_list)} {card_list=}")
     if amount > 0:
+        logger.critical(f"No card to {amount=}")
         raise NoCardError
     else:
         return card_list

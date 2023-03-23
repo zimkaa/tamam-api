@@ -36,3 +36,157 @@ docker exec -i postgres-test-db psql -U postgres < /home/anton/PetProject/oleg/a
 
 docker compose up -d
 
+
+
+
+connect dbeaver to DB
+
+
+1) create user manualy by dbeaver interface
+
+
+2) change profile for postgress console
+
+------------change name-------
+ALTER USER docker
+  RENAME TO webwriter;
+
+
+------------change password-------
+ALTER USER webwriter
+  WITH PASSWORD '<tcGfhjkz123';
+
+
+3) roles set in dbeaver
+
+
+
+backup in container
+
+
+with compress
+example:
+docker exec <postgresql_container> /bin/bash \
+ -c "/usr/bin/pg_dump -U <postgresql_user> <postgresql_database>" \
+ | gzip -9 > postgres-backup.sql.gz
+
+
+real comand:
+docker exec db_app-test /bin/bash \
+ -c "/usr/local/bin/pg_dump -U webwriter postgres" \
+ | gzip -9 > /home/anton/PetProject/NL/alexander/backups/postgres-backup.sql.gz
+
+
+without compress
+ALL
+example:
+docker exec -i postgres /usr/bin/pg_dumpall \
+ -U <postgresql_user> > postgres-backup-all.sql
+
+
+real comand:
+docker exec -i db_app-test /usr/local/bin/pg_dumpall \
+ -U webwriter > /home/anton/PetProject/NL/alexander/backups/postgres-backup-all.sql
+
+ONLY NEEDED
+example:
+docker exec -i postgres /usr/bin/pg_dump \
+ -U <postgresql_user> <postgresql_database> > postgres-backup.sql
+
+
+real comand:
+docker exec -i db_app-test /usr/local/bin/pg_dump \
+ -U webwriter postgres > /home/anton/PetProject/NL/alexander/backups/postgres-backup.sql
+
+
+
+docker exec -i db_app /usr/local/bin/pg_dump \
+ -U postgres postgres > /root/projects/tamam-api/backups/server/postgres-backup.sql
+
+
+restore in container
+without compress
+example:
+cat your_dump.sql | docker exec -i your-db-container psql -U your-db-user -d your-db-name
+
+real comand:
+cat /home/anton/PetProject/NL/alexander/backups/postgres-backup.sql | docker exec -i db_app-test psql -U webwriter -d postgres
+
+
+with compress
+example:
+gunzip < your_dump.sql.gz | docker exec -i your-db-container psql -U your-db-user -d your-db-name
+
+real comand:
+gunzip /home/anton/PetProject/NL/alexander/backups/postgres-backup.sql.gz | docker exec -i db_app-test psql -U webwriter -d postgres
+
+
+Create user in container
+
+-P  --- assign a password to new role
+example:
+
+real comand:
+serverwriter  - superuser
+docker exec -i db_app_full_new su postgres -c "createuser -U serverwriter -w -d -r -P -s anton"
+
+
+Create database in container
+example:
+# dafault superuser = postgres
+docker exec -i db_app_full_new su postgres -c "createdb -O serverwriter -U serverwriter new_test"
+
+
+Change user password and set
+
+docker exec -it db_app-test su postgres
+psql -U serverwriter -d codestorage
+ALTER ROLE anton WITH PASSWORD '<tcGfhjkz123';
+
+
+Delete database
+1)
+docker exec -it db_app-test su postgres
+psql -U serverwriter -d codestorage
+DROP DATABASE postgres;
+2)
+docker exec -it db_app-test su postgres
+psql -U serverwriter -d codestorage
+dropdb -U serverwriter new_test
+3)
+docker exec -i db_app_full_new su postgres -c "dropdb -U serverwriter new_test"
+
+
+Delete user in container
+docker exec -i db_app-test su postgres -c "dropuser -U serverwriter anton"
+
+
+scp root@185.180.230.200:/root/projects/tamam-api/backups/server/postgres-backup.sql /home/anton/PetProject/NL/alexander/backups/server/postgres-backup.sql
+
+
+
+
+
+
+Create table with columns
+
+docker exec -it db_app-test su postgres
+psql -U serverwriter -d codestorage
+CREATE TABLE public.card (
+	card_id uuid NOT NULL,
+	card_code varchar NOT NULL,
+	surname varchar NULL,
+	email varchar NULL,
+	inv int4 NULL,
+	is_received bool NULL,
+	amount int4 NOT NULL,
+	amount_tl int4 NOT NULL,
+	added_time timestamp NOT NULL,
+	used_time timestamp NULL,
+	tg_user_id varchar NULL,
+	tg_user_name varchar NULL,
+	card_status int4 NULL,
+	CONSTRAINT card_pkey PRIMARY KEY (card_id)
+);
+
+

@@ -1,5 +1,20 @@
-docker run --rm -v alex_pgdata:/volume -v /tmp:/backup alpine tar -cjf /backup/alex_pgdata.tar.bz2 -C /volume ./
+
+backup
+docker run --rm -v alex_pgdata:/volume -v /home/anton/PetProject/NL/alexander/volume_store/dumps:/backup alpine tar -cjf /backup/alex_pgdata.tar.bz2 -C /volume ./
+
+
+restore
+docker run --rm -v alex_pgdata:/volume -v /home/anton/PetProject/NL/alexander/volume_store/dumps:/backup alpine sh -c "rm -rf /volume/* /volume/..?* /volume/.[!.]* ; tar -C /volume/ -xjf /backup/alex_pgdata.tar.bz2"
 
 
 
-docker run --rm -v alex_pgdata:/volume -v /tmp:/backup alpine sh -c "rm -rf /volume/* /volume/..?* /volume/.[!.]* ; tar -C /volume/ -xjf /backup/alex_pgdata.tar.bz2"
+backup
+docker run --rm -v local_db:/volume -v /home/anton/PetProject/NL/alexander/volume_store/dumps:/backup alpine tar -cjf /backup/local_db.tar.bz2 -C /volume ./
+
+
+restore
+docker run --rm -v local_db:/volume -v /home/anton/PetProject/NL/alexander/volume_store/dumps:/backup alpine sh -c "rm -rf /volume/* /volume/..?* /volume/.[!.]* ; tar -C /volume/ -xjf /backup/local_db.tar.bz2"
+
+
+restore  server
+docker run --rm -v local_db:/volume -v /root/projects/tamam-api/volume_store/dumps:/backup alpine sh -c "rm -rf /volume/* /volume/..?* /volume/.[!.]* ; tar -C /volume/ -xjf /backup/local_db.tar.bz2"

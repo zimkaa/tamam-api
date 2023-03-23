@@ -21,7 +21,7 @@ class WriteToDBError(Exception):
     pass
 
 
-def _make_change(amount: int, card_rows: list[tuple[Card]]) -> list[Card]:
+def _make_change(amount: int, card_rows: list[tuple[Card]]) -> list[Card] | int:
     logger.info("_make_change")
     # TODO должен в порядке убывания
     denominations: dict[int, list[Card]] = dict()
@@ -42,31 +42,29 @@ def _make_change(amount: int, card_rows: list[tuple[Card]]) -> list[Card]:
             if len(len_20) >= count:
                 for _ in range(count):
                     card = denominations.get(20).pop()
-
                     card_list.append(card)
         else:
             logger.critical(f"No card to {amount=}")
-            raise NoCardError
+            # raise NoCardError
+            return amount
         return card_list
     for denom in sorted(denominations.keys(), reverse=True):
         while amount >= denom and len(denominations.get(denom, 0)) > 0:
             if denom in result:
                 result[denom] += 1
-
                 card = denominations[denom].pop()
-
                 card_list.append(card)
             else:
                 result[denom] = 1
-
                 card = denominations[denom].pop()
-
                 card_list.append(card)
             amount -= denom
     logger.critical(f"{type(result)} {result=}")
+    logger.critical(f"{type(card_list)} {card_list=}")
     if amount > 0:
         logger.critical(f"No card to {amount=}")
-        raise NoCardError
+        # raise NoCardError
+        return amount
     else:
         return card_list
 
@@ -114,11 +112,22 @@ async def write_verification_result(needed_amount: int) -> list[Card]:
                 await send_telegram_message(text)
                 raise NoCardError
 
-            try:
-                give_away_list_cards = _make_change(needed_amount, card_rows)
-                logger.debug(f"{give_away_list_cards=}")
-            except NoCardError:
-                text = f"AHTUNG!!! We don't have codes to sell. Customer paid for {needed_amount=}"
+            # try:
+            #     give_away_list_cards = _make_change(needed_amount, card_rows)
+            #     logger.debug(f"{give_away_list_cards=}")
+            # except NoCardError:
+            #     text = f"AHTUNG!!! We don't have codes to sell. Customer paid for {needed_amount=}"
+            #     logger.error(text)
+            #     await send_telegram_message(text)
+            #     raise NoCardError
+
+            give_away_list_cards = _make_change(needed_amount, card_rows)
+            logger.debug(f"{give_away_list_cards=}")
+            if isinstance(give_away_list_cards, int):
+                text = (
+                    f"AHTUNG!!! We don't have codes to sell. Customer paid for {needed_amount=}"
+                    f" but in DB we don't have amount={give_away_list_cards}"
+                )
                 logger.error(text)
                 await send_telegram_message(text)
                 raise NoCardError
