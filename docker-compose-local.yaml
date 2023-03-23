@@ -36,7 +36,7 @@ services:
       - POSTGRES_PASSWORD=${DB_PASS}
       - POSTGRES_DB=${DB_NAME}
     ports:
-      - "${DB_PORT}:5432"
+      - "${DB_PORT_OUT}:5432"
     volumes:
       - local_db:/var/lib/postgresql/data
     networks:
