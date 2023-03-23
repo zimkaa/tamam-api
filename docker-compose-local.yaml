@@ -10,7 +10,7 @@ services:
     image: "my_back_end:${API_VERSION}"
     restart: unless-stopped
     environment:
-      - DB_HOST=db_app
+      - DB_HOST=db_app_new
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASS}
       - DB_NAME=${DB_NAME}
@@ -23,11 +23,12 @@ services:
       - DIGISELLER_TOKEN=${DIGISELLER_TOKEN}
       - CHECK_CODE_URL=https://api.digiseller.ru/api/purchases/unique-code/{unique_code}?token={token}
     depends_on:
-      - db_app
+      - db_app_new
     networks:
       - custom
-  db_app:
-    container_name: "db_app"
+
+  db_app_new:
+    container_name: "db_app_new"
     image: postgres:14.1-alpine
     restart: unless-stopped
     environment:
@@ -35,11 +36,27 @@ services:
       - POSTGRES_PASSWORD=${DB_PASS}
       - POSTGRES_DB=${DB_NAME}
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:5432"
     volumes:
-      - alex_pgdata:/var/lib/postgresql/data
+      - local_db:/var/lib/postgresql/data
     networks:
       - custom
+
+  # db_app:
+  #   container_name: "db_app"
+  #   image: postgres:14.1-alpine
+  #   restart: unless-stopped
+  #   environment:
+  #     - POSTGRES_USER=${DB_USER}
+  #     - POSTGRES_PASSWORD=${DB_PASS}
+  #     - POSTGRES_DB=${DB_NAME}
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - alex_pgdata:/var/lib/postgresql/data
+  #   networks:
+  #     - custom
+
   certbot:
     image: certbot/certbot
     depends_on:
@@ -49,6 +66,7 @@ services:
       - ./certbot/newconf:/etc/letsencrypt:rw
       - ./certbot/www:/var/www/certbot:rw
     command: certonly --webroot --webroot-path=/var/www/certbot --email zimkaa87@gmail.com --agree-tos --no-eff-email -d tamam.games
+
   nginx:
     image: nginx:latest
     depends_on:
@@ -64,6 +82,7 @@ services:
       - ./certbot/www:/var/www/certbot:ro
     networks:
       - custom
+
   sellerbot:
     build:
       context: ./sellerbot
@@ -72,7 +91,7 @@ services:
     image: "sellerbot:${API_VERSION}"
     restart: unless-stopped
     environment:
-      - DB_HOST=db_app
+      - DB_HOST=db_app_new
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASS}
       - DB_NAME=${DB_NAME}
@@ -83,10 +102,13 @@ services:
     networks:
       - custom
     depends_on:
-      - db_app
+      - db_app_new
+
 networks:
   custom:
     driver: bridge
 volumes:
-  alex_pgdata:
+  # alex_pgdata:
+  #   external: true
+  local_db:
     external: true
