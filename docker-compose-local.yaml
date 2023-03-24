@@ -42,20 +42,20 @@ services:
     networks:
       - custom
 
-  # db_app:
-  #   container_name: "db_app"
-  #   image: postgres:14.1-alpine
-  #   restart: unless-stopped
-  #   environment:
-  #     - POSTGRES_USER=${DB_USER}
-  #     - POSTGRES_PASSWORD=${DB_PASS}
-  #     - POSTGRES_DB=${DB_NAME}
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - alex_pgdata:/var/lib/postgresql/data
-  #   networks:
-  #     - custom
+  db_app:
+    container_name: "db_app"
+    image: postgres:14.1-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USER_OLD}
+      - POSTGRES_PASSWORD=${DB_PASS_OLD}
+      - POSTGRES_DB=${DB_NAME_OLD}
+    ports:
+      - "5455:5455"
+    volumes:
+      - alex_pgdata:/var/lib/postgresql/data
+    networks:
+      - custom
 
   certbot:
     image: certbot/certbot
@@ -108,7 +108,7 @@ networks:
   custom:
     driver: bridge
 volumes:
-  # alex_pgdata:
-  #   external: true
+  alex_pgdata:
+    external: true
   local_db:
     external: true
