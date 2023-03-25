@@ -112,21 +112,14 @@ async def write_verification_result(needed_amount: int) -> list[Card]:
                 await send_telegram_message(text)
                 raise NoCardError
 
-            # try:
-            #     give_away_list_cards = _make_change(needed_amount, card_rows)
-            #     logger.debug(f"{give_away_list_cards=}")
-            # except NoCardError:
-            #     text = f"AHTUNG!!! We don't have codes to sell. Customer paid for {needed_amount=}"
-            #     logger.error(text)
-            #     await send_telegram_message(text)
-            #     raise NoCardError
-
             give_away_list_cards = _make_change(needed_amount, card_rows)
             logger.debug(f"{give_away_list_cards=}")
             if isinstance(give_away_list_cards, int):
+                need_buy_amount = needed_amount - give_away_list_cards
                 text = (
-                    f"AHTUNG!!! We don't have codes to sell. Customer paid for {needed_amount=}"
-                    f" but in DB we don't have amount={give_away_list_cards}"
+                    f"AHTUNG!!! We don't have enough codes to sell. Need {needed_amount}TL"
+                    f" we don't have codes for the amount {need_buy_amount}TL"
+                    f" but we have codes only for {give_away_list_cards}TL"
                 )
                 logger.error(text)
                 await send_telegram_message(text)
