@@ -16,7 +16,7 @@ async def start_bot(dispatcher: Dispatcher):
 
 async def stop_bot(dispatcher: Dispatcher):
     for admin_user in ADMIN_ID_LIST:
-        await dispatcher.bot.send_message(admin_user, text="Bot stopped")
+        await dispatcher.bot.send_message(admin_user, text="Bot stopped. It sends when bot stopped correctly")
 
 
 def start():
