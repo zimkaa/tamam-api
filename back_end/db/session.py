@@ -12,7 +12,11 @@ from back_end import settings
 
 # create async engine for interaction with database
 engine = create_async_engine(
-    settings.REAL_DATABASE_URL, future=True, echo=True, execution_options={"isolation_level": "AUTOCOMMIT"}
+    settings.REAL_DATABASE_URL,
+    future=True,
+    echo=True,
+    pool_recycle=1800,
+    execution_options={"isolation_level": "AUTOCOMMIT"},
 )
 
 # create session for the interaction with database
